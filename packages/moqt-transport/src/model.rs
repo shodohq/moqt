@@ -7,6 +7,12 @@ pub struct SetupParameter {
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Parameter {
+    pub parameter_type: u64,
+    pub value: Vec<u8>,
+}
+
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Location {
     pub group: u64,
     pub object: u64,
