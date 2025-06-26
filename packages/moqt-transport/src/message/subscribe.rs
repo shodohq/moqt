@@ -1,7 +1,7 @@
 use bytes::{BufMut, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
-use crate::model::{Location, SetupParameter};
+use crate::model::{Location, Parameter};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Subscribe {
@@ -14,7 +14,7 @@ pub struct Subscribe {
     pub filter_type: u64,
     pub start_location: Option<Location>,
     pub end_group: Option<u64>,
-    pub parameters: Vec<SetupParameter>,
+    pub parameters: Vec<Parameter>,
 }
 
 impl Subscribe {
@@ -124,7 +124,7 @@ impl Subscribe {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(SetupParameter { parameter_type: ty, value });
+            parameters.push(Parameter { parameter_type: ty, value });
         }
 
         Ok(Subscribe {
@@ -158,7 +158,7 @@ mod tests {
             filter_type: 0x4,
             start_location: Some(Location { group: 10, object: 5 }),
             end_group: Some(20),
-            parameters: vec![SetupParameter { parameter_type: 1, value: vec![42] }],
+            parameters: vec![Parameter { parameter_type: 1, value: vec![42] }],
         };
 
         let mut buf = BytesMut::new();
