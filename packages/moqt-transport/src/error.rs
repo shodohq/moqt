@@ -4,4 +4,6 @@ pub enum Error {
     Io(#[from] std::io::Error),
     #[error("varint out of range")]
     VarIntRange,
+    #[error("unknown message type")]
+    UnknownMessageType,
 }
