@@ -41,9 +41,7 @@ impl ServerSetup {
         // Setup Parameters
         vi.encode(self.setup_parameters.len() as u64, buf)?;
         for p in &self.setup_parameters {
-            vi.encode(p.parameter_type, buf)?;
-            vi.encode(p.value.len() as u64, buf)?;
-            buf.put_slice(&p.value);
+            p.encode(buf)?;
         }
 
         Ok(())
@@ -70,21 +68,7 @@ impl ServerSetup {
             as usize;
         let mut parameters = Vec::with_capacity(params_len);
         for _ in 0..params_len {
-            let ty = vi
-                .decode(buf)?
-                .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter type"))?;
-            let len = vi
-                .decode(buf)?
-                .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter length"))?
-                as usize;
-            if buf.len() < len {
-                return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
-            }
-            let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter {
-                parameter_type: ty,
-                value,
-            });
+            parameters.push(Parameter::decode(buf)?);
         }
 
         Ok(ServerSetup {
@@ -109,7 +93,7 @@ mod tests {
                 },
                 Parameter {
                     parameter_type: 0x04,
-                    value: vec![1, 2],
+                    value: vec![1],
                 },
             ],
         };
@@ -158,9 +142,8 @@ mod tests {
         let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // selected_version
         vi.encode(1, &mut buf).unwrap(); // number of parameters
-        vi.encode(0x02, &mut buf).unwrap(); // parameter type
-        vi.encode(3, &mut buf).unwrap(); // parameter length
-        buf.put_slice(&[1, 2]); // missing one byte of value
+        vi.encode(0x02, &mut buf).unwrap(); // parameter type (even)
+        buf.put_u8(0x40); // start of two-byte varint but missing second byte
 
         match ServerSetup::decode(&mut buf) {
             Err(crate::error::Error::Io(e)) => {
