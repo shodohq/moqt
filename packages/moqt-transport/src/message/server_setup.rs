@@ -121,6 +121,22 @@ mod tests {
     }
 
     #[test]
+    fn encode_decode_roundtrip_no_parameters() {
+        let msg = ServerSetup {
+            selected_version: 1,
+            setup_parameters: Vec::new(),
+        };
+
+        let mut buf = BytesMut::new();
+        msg.encode(&mut buf).unwrap();
+
+        let mut decode_buf = buf.clone();
+        let decoded = ServerSetup::decode(&mut decode_buf).unwrap();
+        assert!(decode_buf.is_empty());
+        assert_eq!(decoded, msg);
+    }
+
+    #[test]
     fn decode_incomplete() {
         let mut buf = BytesMut::new();
         match ServerSetup::decode(&mut buf) {
