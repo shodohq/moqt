@@ -22,6 +22,9 @@ impl SubscribeUpdate {
         vi.encode(self.end_group, buf)?;
 
         buf.put_u8(self.subscriber_priority);
+        if self.forward != 0 && self.forward != 1 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid forward value").into());
+        }
         buf.put_u8(self.forward);
 
         vi.encode(self.parameters.len() as u64, buf)?;

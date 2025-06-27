@@ -23,10 +23,19 @@ impl PublishOk {
 
         vi.encode(self.request_id, buf)?;
 
+        if self.forward != 0 && self.forward != 1 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid forward value").into());
+        }
         buf.put_u8(self.forward);
         buf.put_u8(self.subscriber_priority);
+        if self.group_order == 0 || self.group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
         buf.put_u8(self.group_order);
 
+        if !matches!(self.filter_type, 0x1 | 0x2 | 0x3 | 0x4) {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid filter type").into());
+        }
         vi.encode(self.filter_type, buf)?;
 
         if matches!(self.filter_type, 0x3 | 0x4) {
@@ -68,12 +77,21 @@ impl PublishOk {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "flags").into());
         }
         let forward = buf.split_to(1)[0];
+        if forward != 0 && forward != 1 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid forward value").into());
+        }
         let subscriber_priority = buf.split_to(1)[0];
         let group_order = buf.split_to(1)[0];
+        if group_order == 0 || group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
 
         let filter_type = vi
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "filter type"))?;
+        if !matches!(filter_type, 0x1 | 0x2 | 0x3 | 0x4) {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid filter type").into());
+        }
 
         let start = if matches!(filter_type, 0x3 | 0x4) {
             Some(Location::decode(buf)?)
@@ -156,7 +174,7 @@ mod tests {
             request_id: 2,
             forward: 0,
             subscriber_priority: 0,
-            group_order: 0,
+            group_order: 1,
             filter_type: 0x2,
             start: None,
             end_group: None,

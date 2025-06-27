@@ -30,7 +30,14 @@ impl Publish {
 
         vi.encode(self.track_alias, buf)?;
 
+        if self.group_order == 0 || self.group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
         buf.put_u8(self.group_order);
+
+        if self.content_exists != 0 && self.content_exists != 1 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid content exists value").into());
+        }
         buf.put_u8(self.content_exists);
 
         if self.content_exists == 1 {
@@ -85,7 +92,13 @@ impl Publish {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "flags").into());
         }
         let group_order = buf.split_to(1)[0];
+        if group_order == 0 || group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
         let content_exists = buf.split_to(1)[0];
+        if content_exists != 0 && content_exists != 1 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid content exists value").into());
+        }
 
         let largest = if content_exists == 1 {
             Some(Location::decode(buf)?)
@@ -97,6 +110,9 @@ impl Publish {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "forward").into());
         }
         let forward = buf.split_to(1)[0];
+        if forward != 0 && forward != 1 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid forward value").into());
+        }
 
         let params_len = vi
             .decode(buf)?
@@ -164,7 +180,7 @@ mod tests {
             track_namespace: 7,
             track_name: "audio".into(),
             track_alias: 8,
-            group_order: 0,
+            group_order: 1,
             content_exists: 0,
             largest: None,
             forward: 0,

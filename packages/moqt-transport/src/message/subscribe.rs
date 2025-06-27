@@ -28,9 +28,32 @@ impl Subscribe {
         buf.put_slice(self.track_name.as_bytes());
 
         buf.put_u8(self.subscriber_priority);
+
+        if self.group_order > 2 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid group order",
+            )
+            .into());
+        }
         buf.put_u8(self.group_order);
+
+        if self.forward != 0 && self.forward != 1 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid forward value",
+            )
+            .into());
+        }
         buf.put_u8(self.forward);
 
+        if !matches!(self.filter_type, 0x1 | 0x2 | 0x3 | 0x4) {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid filter type",
+            )
+            .into());
+        }
         vi.encode(self.filter_type, buf)?;
 
         if matches!(self.filter_type, 0x3 | 0x4) {
@@ -86,11 +109,20 @@ impl Subscribe {
         }
         let subscriber_priority = buf.split_to(1)[0];
         let group_order = buf.split_to(1)[0];
+        if group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
         let forward = buf.split_to(1)[0];
+        if forward != 0 && forward != 1 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid forward value").into());
+        }
 
         let filter_type = vi
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "filter type"))?;
+        if !matches!(filter_type, 0x1 | 0x2 | 0x3 | 0x4) {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid filter type").into());
+        }
 
         let start_location = if matches!(filter_type, 0x3 | 0x4) {
             Some(Location::decode(buf)?)
