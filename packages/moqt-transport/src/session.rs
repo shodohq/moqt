@@ -72,6 +72,7 @@ impl<T: Transport> Session<T> {
 mod tests {
     use super::*;
     use std::task::{Context, Poll};
+    use std::pin::Pin;
     use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
     use crate::transport::{BiStream, BoxError};
 

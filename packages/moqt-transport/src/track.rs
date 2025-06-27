@@ -2,24 +2,41 @@ use bytes::Bytes;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use std::sync::atomic::{AtomicU64, Ordering};
+use tokio::sync::mpsc;
+use futures_core::Stream;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
 use crate::error::Error;
+use crate::message::SubscribeOk;
 
 pub type FullTrackName = String;
 pub type TrackAlias = u64;
 
-#[derive(Default)]
 pub struct TrackManager {
     #[allow(dead_code)]
-    tracks: RwLock<HashMap<FullTrackName, Arc<TrackState>>>,
+    tracks: RwLock<HashMap<FullTrackName, Arc<std::sync::Mutex<TrackState>>>>,
     aliases: RwLock<HashMap<TrackAlias, FullTrackName>>,
+    requests: RwLock<HashMap<u64, FullTrackName>>,
     request_counter: AtomicU64,
+}
+
+impl Default for TrackManager {
+    fn default() -> Self {
+        Self {
+            tracks: RwLock::new(HashMap::new()),
+            aliases: RwLock::new(HashMap::new()),
+            requests: RwLock::new(HashMap::new()),
+            request_counter: AtomicU64::new(0),
+        }
+    }
 }
 
 #[allow(dead_code)]
 struct TrackState {
     name: FullTrackName,
     alias: Option<TrackAlias>,
+    subscribers: Vec<mpsc::Sender<Result<Object, Error>>>,
 }
 
 impl TrackManager {
@@ -27,10 +44,13 @@ impl TrackManager {
     /// state. Existing tracks are returned as-is.
     pub(crate) fn add_track(&self, name: FullTrackName) {
         let mut tracks = self.tracks.write().unwrap();
-        tracks.entry(name.clone()).or_insert_with(|| Arc::new(TrackState {
-            name,
-            alias: None,
-        }));
+        tracks.entry(name.clone()).or_insert_with(|| {
+            Arc::new(std::sync::Mutex::new(TrackState {
+                name,
+                alias: None,
+                subscribers: Vec::new(),
+            }))
+        });
     }
 
     pub fn assign_alias(&self, alias: TrackAlias, name: FullTrackName) -> Result<(), Error> {
@@ -52,13 +72,8 @@ impl TrackManager {
     pub(crate) fn set_track_alias(&self, name: &FullTrackName, alias: TrackAlias) -> Result<(), Error> {
         self.assign_alias(alias, name.clone())?;
         if let Some(entry) = self.tracks.write().unwrap().get_mut(name) {
-            if let Some(state) = Arc::get_mut(entry) {
-                state.alias = Some(alias);
-            } else {
-                // There are outstanding references; replace with updated copy.
-                let new = Arc::new(TrackState { name: name.clone(), alias: Some(alias) });
-                *entry = new;
-            }
+            let mut state = entry.lock().unwrap();
+            state.alias = Some(alias);
         }
         Ok(())
     }
@@ -66,6 +81,31 @@ impl TrackManager {
     pub fn resolve_alias(&self, alias: TrackAlias) -> Option<FullTrackName> {
         let aliases = self.aliases.read().unwrap();
         aliases.get(&alias).cloned()
+    }
+
+    /// Start a new subscription to the given track name. Returns the request id and a stream of objects.
+    pub fn subscribe_track(&self, name: FullTrackName) -> (u64, ObjectStream) {
+        self.add_track(name.clone());
+        let request_id = self.new_request_id();
+        let (tx, rx) = mpsc::channel(16);
+
+        if let Some(entry) = self.tracks.read().unwrap().get(&name) {
+            let mut state = entry.lock().unwrap();
+            state.subscribers.push(tx);
+        }
+
+        self.requests.write().unwrap().insert(request_id, name);
+        (request_id, ObjectStream { rx })
+    }
+
+    /// Process SUBSCRIBE_OK by registering the alias and clearing pending state.
+    pub fn handle_subscribe_ok(&self, ok: &SubscribeOk) -> Result<(), Error> {
+        let name = {
+            let mut reqs = self.requests.write().unwrap();
+            reqs.remove(&ok.request_id)
+        };
+        let name = name.ok_or_else(|| Error::ProtocolViolation { reason: "unknown request".into() })?;
+        self.set_track_alias(&name, ok.track_alias)
     }
 }
 
@@ -93,6 +133,19 @@ pub struct ObjectMetadata {
     pub group_id: u64,
     pub object_id: u64,
     pub priority: u8,
+}
+
+/// Stream of objects for a subscription.
+pub struct ObjectStream {
+    rx: mpsc::Receiver<Result<Object, Error>>,
+}
+
+impl Stream for ObjectStream {
+    type Item = Result<Object, Error>;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.rx.poll_recv(cx)
+    }
 }
 
 #[cfg(test)]
@@ -125,5 +178,30 @@ mod tests {
         let first = manager.new_request_id();
         let second = manager.new_request_id();
         assert!(second > first);
+    }
+
+    #[test]
+    fn subscribe_creates_mapping() {
+        let manager = TrackManager::default();
+        let (id, mut stream) = manager.subscribe_track("video".to_string());
+        assert_eq!(manager.requests.read().unwrap().get(&id), Some(&"video".to_string()));
+        drop(stream);
+    }
+
+    #[test]
+    fn handle_subscribe_ok_sets_alias() {
+        let manager = TrackManager::default();
+        let (id, _stream) = manager.subscribe_track("audio".to_string());
+        let ok = SubscribeOk {
+            request_id: id,
+            track_alias: 7,
+            expires: 0,
+            group_order: 1,
+            content_exists: false,
+            largest_location: None,
+            parameters: Vec::new(),
+        };
+        manager.handle_subscribe_ok(&ok).unwrap();
+        assert_eq!(manager.resolve_alias(7).as_deref(), Some("audio"));
     }
 }
