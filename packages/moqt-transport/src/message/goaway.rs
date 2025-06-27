@@ -31,7 +31,9 @@ pub struct Goaway {
 }
 
 impl Goaway {
-    const MAX_URI_LENGTH: usize = 8_192;
+    /// The maximum size in bytes of the optional URI contained in a GOAWAY
+    /// message as defined by the specification.
+    pub const MAX_URI_LENGTH: usize = 8_192;
 
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::coding::VarInt;
