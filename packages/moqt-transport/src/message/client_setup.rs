@@ -3,18 +3,12 @@ use tokio_util::codec::{Decoder, Encoder};
 
 use crate::model::SetupParameter;
 
-/// Representation of a CLIENT_SETUP message body.
-///
-/// The structure keeps the list of protocol versions supported by the client
-/// and the raw setup parameters that were provided.  Each setup parameter is
-/// stored as a type-value pair so that unknown parameters can be preserved when
-/// re-encoding the message.
+/// CLIENT_SETUP
+/// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-client_setup-and-server_set
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ClientSetup {
-    /// Supported protocol versions.
-    pub versions: Vec<u32>,
-    /// Raw setup parameters.
-    pub parameters: Vec<SetupParameter>,
+    pub supported_versions: Vec<u32>,
+    pub setup_parameters: Vec<SetupParameter>,
 }
 
 
@@ -24,14 +18,14 @@ impl ClientSetup {
         let mut vi = crate::codec::VarInt;
 
         // number of supported versions
-        vi.encode(self.versions.len() as u64, buf)?;
-        for v in &self.versions {
+        vi.encode(self.supported_versions.len() as u64, buf)?;
+        for v in &self.supported_versions {
             vi.encode(*v as u64, buf)?;
         }
 
         // setup parameters
-        vi.encode(self.parameters.len() as u64, buf)?;
-        for p in &self.parameters {
+        vi.encode(self.setup_parameters.len() as u64, buf)?;
+        for p in &self.setup_parameters {
             vi.encode(p.parameter_type, buf)?;
             vi.encode(p.value.len() as u64, buf)?;
             buf.put_slice(&p.value);
@@ -78,7 +72,7 @@ impl ClientSetup {
             parameters.push(SetupParameter { parameter_type: ty, value });
         }
 
-        Ok(ClientSetup { versions, parameters })
+        Ok(ClientSetup { supported_versions: versions, setup_parameters: parameters })
     }
 }
 
@@ -90,8 +84,8 @@ mod tests {
     #[test]
     fn encode_decode_roundtrip() {
         let msg = ClientSetup {
-            versions: vec![1, 0xff00000d],
-            parameters: vec![
+            supported_versions: vec![1, 0xff00000d],
+            setup_parameters: vec![
                 SetupParameter { parameter_type: 0x01, value: b"/".to_vec() },
                 SetupParameter { parameter_type: 0x02, value: vec![5] },
             ],
