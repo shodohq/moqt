@@ -13,9 +13,12 @@ use crate::{
     },
 };
 
-pub struct Codec;
+/// `MoqCodec` encodes and decodes [`ControlMessage`] frames on the control
+/// stream. It uses the variable-length integer utilities provided in this
+/// module.
+pub struct MoqCodec;
 
-impl Encoder<ControlMessage> for Codec {
+impl Encoder<ControlMessage> for MoqCodec {
     type Error = Error;
 
     fn encode(&mut self, item: ControlMessage, dst: &mut BytesMut) -> Result<(), Self::Error> {
@@ -228,7 +231,7 @@ impl Encoder<ControlMessage> for Codec {
     }
 }
 
-impl Decoder for Codec {
+impl Decoder for MoqCodec {
     type Item = ControlMessage;
     type Error = Error;
 
