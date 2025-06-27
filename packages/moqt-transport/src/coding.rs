@@ -423,7 +423,7 @@ impl Decoder for VarInt {
 #[cfg(test)]
 mod tests {
     use super::{MoqCodec, VarInt};
-    use crate::message::{ControlMessage, RequestsBlocked};
+    use crate::message::{ControlMessage, MaxRequestId, RequestsBlocked};
     use bytes::BytesMut;
     use tokio_util::codec::{Decoder, Encoder};
 
@@ -494,6 +494,25 @@ mod tests {
         match decoded {
             ControlMessage::RequestsBlocked(rb) => {
                 assert_eq!(rb.maximum_request_id, 42);
+            }
+            _ => panic!("unexpected message"),
+        }
+        assert!(buf.is_empty());
+    }
+
+    #[test]
+    fn codec_max_request_id_roundtrip() {
+        let mut codec = MoqCodec;
+        let msg = ControlMessage::MaxRequestId(MaxRequestId { request_id: 5 });
+
+        let mut buf = BytesMut::new();
+        codec.encode(msg, &mut buf).unwrap();
+        assert_eq!(buf.as_ref(), &[0x15, 0x01, 0x05]);
+
+        let decoded = codec.decode(&mut buf).unwrap().unwrap();
+        match decoded {
+            ControlMessage::MaxRequestId(mr) => {
+                assert_eq!(mr.request_id, 5);
             }
             _ => panic!("unexpected message"),
         }

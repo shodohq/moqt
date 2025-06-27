@@ -101,4 +101,15 @@ mod tests {
             r => panic!("unexpected result: {:?}", r),
         }
     }
+
+    #[test]
+    fn decode_incomplete_varint() {
+        let mut buf = BytesMut::from(&b"\x40"[..]);
+        match MaxRequestId::decode(&mut buf) {
+            Err(crate::error::Error::Io(e)) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+            }
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }
