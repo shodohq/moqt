@@ -142,4 +142,31 @@ mod tests {
             r => panic!("unexpected result: {:?}", r),
         }
     }
+
+    #[test]
+    fn decode_truncated_parameter_value() {
+        // Build a buffer manually with one version and a single parameter
+        // whose declared length is larger than the available data.
+        let mut buf = BytesMut::new();
+        let mut vi = crate::coding::VarInt;
+
+        // One supported version (value 1)
+        vi.encode(1, &mut buf).unwrap();
+        vi.encode(1, &mut buf).unwrap();
+
+        // One parameter
+        vi.encode(1, &mut buf).unwrap();
+        // Parameter Type = 0x01
+        vi.encode(0x01, &mut buf).unwrap();
+        // Declare length 2 but only provide 1 byte
+        vi.encode(2, &mut buf).unwrap();
+        buf.put_u8(b'/');
+
+        match ClientSetup::decode(&mut buf) {
+            Err(crate::error::Error::Io(e)) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+            }
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }
