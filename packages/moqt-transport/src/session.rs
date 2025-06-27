@@ -198,4 +198,24 @@ mod tests {
             .handle_goaway(&Goaway { new_session_uri: None }, true)
             .unwrap();
     }
+
+    #[test]
+    fn client_accepts_uri_and_sets_state() {
+        let (session, _rx) = Session::new(Arc::new(DummyTransport));
+
+        session
+            .handle_goaway(
+                &Goaway {
+                    new_session_uri: Some("https://example.com".into()),
+                },
+                false,
+            )
+            .unwrap();
+
+        let state = session.state.lock().unwrap();
+        match *state {
+            State::Closing => {}
+            _ => panic!("unexpected state"),
+        }
+    }
 }
