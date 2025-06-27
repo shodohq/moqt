@@ -143,4 +143,15 @@ mod tests {
             e => panic!("unexpected result: {:?}", e),
         }
     }
+
+    #[test]
+    fn decode_incomplete() {
+        let mut buf = BytesMut::new();
+        match Goaway::decode(&mut buf) {
+            Err(crate::error::Error::Io(e)) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+            }
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }

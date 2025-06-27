@@ -192,11 +192,17 @@ mod tests {
     }
 
     #[test]
-    fn server_accepts_no_uri() {
+    fn server_accepts_no_uri_sets_state() {
         let (session, _rx) = Session::new(Arc::new(DummyTransport));
         session
             .handle_goaway(&Goaway { new_session_uri: None }, true)
             .unwrap();
+
+        let state = session.state.lock().unwrap();
+        match *state {
+            State::Closing => {}
+            _ => panic!("unexpected state"),
+        }
     }
 
     #[test]
