@@ -28,8 +28,8 @@ impl<T: Transport> Session<T> {
         let session = Session {
             state: Arc::new(Mutex::new(State::Initializing)),
             received_goaway: Arc::new(Mutex::new(false)),
-            control_tx: tx,
-            track_manager: TrackManager::default(),
+            control_tx: tx.clone(),
+            track_manager: TrackManager::new(tx),
             transport,
         };
         (session, rx)
