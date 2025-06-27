@@ -119,4 +119,15 @@ mod tests {
         assert!(decode_buf.is_empty());
         assert_eq!(decoded, msg);
     }
+
+    #[test]
+    fn decode_incomplete() {
+        let mut buf = BytesMut::new();
+        match ServerSetup::decode(&mut buf) {
+            Err(crate::error::Error::Io(e)) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+            }
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }
