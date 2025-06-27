@@ -57,8 +57,11 @@ impl ServerSetup {
         // Selected Version
         let version = vi
             .decode(buf)?
-            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "version"))?
-            as u32;
+            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "version"))?;
+        if version > u32::MAX as u64 {
+            return Err(crate::error::Error::VarIntRange);
+        }
+        let version = version as u32;
 
         // Setup Parameters
         let params_len = vi
@@ -191,5 +194,20 @@ mod tests {
             _ => panic!("unexpected message type"),
         }
         assert!(buf.is_empty());
+    }
+
+    #[test]
+    fn decode_selected_version_overflow() {
+        let mut buf = BytesMut::new();
+        let mut vi = crate::coding::VarInt;
+
+        // Encode a version that does not fit into u32
+        vi.encode((u32::MAX as u64) + 1, &mut buf).unwrap();
+        vi.encode(0, &mut buf).unwrap(); // zero parameters
+
+        match ServerSetup::decode(&mut buf) {
+            Err(crate::error::Error::VarIntRange) => {}
+            r => panic!("unexpected result: {:?}", r),
+        }
     }
 }
