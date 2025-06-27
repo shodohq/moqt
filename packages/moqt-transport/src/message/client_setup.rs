@@ -169,4 +169,37 @@ mod tests {
             r => panic!("unexpected result: {:?}", r),
         }
     }
+
+    #[test]
+    fn encode_decode_roundtrip_no_parameters() {
+        let msg = ClientSetup {
+            supported_versions: vec![1],
+            setup_parameters: Vec::new(),
+        };
+
+        let mut buf = BytesMut::new();
+        msg.encode(&mut buf).unwrap();
+
+        let mut decode_buf = buf.clone();
+        let decoded = ClientSetup::decode(&mut decode_buf).unwrap();
+        assert!(decode_buf.is_empty());
+        assert_eq!(decoded, msg);
+    }
+
+    #[test]
+    fn decode_truncated_versions() {
+        let mut buf = BytesMut::new();
+        let mut vi = crate::coding::VarInt;
+
+        // Declare two versions but only encode one value.
+        vi.encode(2, &mut buf).unwrap();
+        vi.encode(1, &mut buf).unwrap();
+
+        match ClientSetup::decode(&mut buf) {
+            Err(crate::error::Error::Io(e)) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+            }
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }
