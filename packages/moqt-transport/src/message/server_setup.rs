@@ -33,7 +33,7 @@ pub struct ServerSetup {
 
 impl ServerSetup {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // Selected Version
         vi.encode(self.selected_version as u64, buf)?;
@@ -52,7 +52,7 @@ impl ServerSetup {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // Selected Version
         let version = vi
@@ -155,7 +155,7 @@ mod tests {
         use bytes::BufMut;
 
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // selected_version
         vi.encode(1, &mut buf).unwrap(); // number of parameters
         vi.encode(0x02, &mut buf).unwrap(); // parameter type
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn codec_roundtrip() {
-        use crate::{coding::MoqCodec, message::ControlMessage};
+        use crate::{codec::ControlMessageCodec, message::ControlMessage};
 
         let msg = ServerSetup {
             selected_version: 1,
@@ -182,7 +182,7 @@ mod tests {
             }],
         };
 
-        let mut codec = MoqCodec;
+        let mut codec = ControlMessageCodec;
         let mut buf = BytesMut::new();
         codec
             .encode(ControlMessage::ServerSetup(msg.clone()), &mut buf)
@@ -199,7 +199,7 @@ mod tests {
     #[test]
     fn decode_selected_version_overflow() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // Encode a version that does not fit into u32
         vi.encode((u32::MAX as u64) + 1, &mut buf).unwrap();

@@ -1,9 +1,9 @@
 use bytes::Bytes;
-use tokio::io::{self, AsyncRead, AsyncWrite, DuplexStream};
-use tokio::io::duplex;
-use tokio::sync::mpsc;
 use std::pin::Pin;
 use std::task::{Context, Poll};
+use tokio::io::duplex;
+use tokio::io::{self, AsyncRead, AsyncWrite, DuplexStream};
+use tokio::sync::mpsc;
 
 use crate::transport::{BiStream, BoxError, Transport};
 
@@ -107,7 +107,10 @@ impl Transport for MockTransport {
 
     async fn open_uni_stream(&mut self) -> Result<Self::Uni, BoxError> {
         let (local, remote) = duplex(1024);
-        self.uni_tx.send(remote).await.map_err(|e| Box::new(e) as BoxError)?;
+        self.uni_tx
+            .send(remote)
+            .await
+            .map_err(|e| Box::new(e) as BoxError)?;
         Ok(MockUniStream(local))
     }
 
@@ -125,7 +128,10 @@ impl Transport for MockTransport {
             .send((r2, w2))
             .await
             .map_err(|e| Box::new(e) as BoxError)?;
-        Ok(MockBiStream { read: r1, write: w1 })
+        Ok(MockBiStream {
+            read: r1,
+            write: w1,
+        })
     }
 
     async fn accept_bi_stream(&mut self) -> Result<Self::Bi, BoxError> {

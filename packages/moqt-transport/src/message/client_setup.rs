@@ -34,7 +34,7 @@ pub struct ClientSetup {
 
 impl ClientSetup {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // Supported Versions
         vi.encode(self.supported_versions.len() as u64, buf)?;
@@ -56,7 +56,7 @@ impl ClientSetup {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // Supported Versions
         let versions_len = vi
@@ -148,7 +148,7 @@ mod tests {
         // Build a buffer manually with one version and a single parameter
         // whose declared length is larger than the available data.
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // One supported version (value 1)
         vi.encode(1, &mut buf).unwrap();
@@ -189,7 +189,7 @@ mod tests {
     #[test]
     fn decode_truncated_versions() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // Declare two versions but only encode one value.
         vi.encode(2, &mut buf).unwrap();

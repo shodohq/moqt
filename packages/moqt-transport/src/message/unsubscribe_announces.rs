@@ -9,7 +9,7 @@ pub struct UnsubscribeAnnounces {
 
 impl UnsubscribeAnnounces {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         vi.encode(self.track_namespace, buf)?;
 
@@ -22,7 +22,7 @@ impl UnsubscribeAnnounces {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         let track_namespace = vi
             .decode(buf)?

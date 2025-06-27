@@ -1,7 +1,7 @@
-use moqt_transport::mock::MockTransport;
-use moqt_transport::transport::{Transport, BiStream};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use bytes::Bytes;
+use moqt_transport::mock::MockTransport;
+use moqt_transport::transport::{BiStream, Transport};
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
 #[test]
 fn unidirectional_stream_roundtrip() {

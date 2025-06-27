@@ -19,7 +19,7 @@ pub struct Subscribe {
 
 impl Subscribe {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         vi.encode(self.request_id, buf)?;
         vi.encode(self.track_namespace, buf)?;
@@ -93,7 +93,7 @@ impl Subscribe {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         let request_id = vi
             .decode(buf)?

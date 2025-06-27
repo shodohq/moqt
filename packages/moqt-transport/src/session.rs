@@ -71,10 +71,10 @@ impl<T: Transport> Session<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::task::{Context, Poll};
-    use std::pin::Pin;
-    use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
     use crate::transport::{BiStream, BoxError};
+    use std::pin::Pin;
+    use std::task::{Context, Poll};
+    use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
     #[derive(Clone)]
     struct DummyStream;
@@ -102,10 +102,7 @@ mod tests {
             Poll::Ready(Ok(()))
         }
 
-        fn poll_shutdown(
-            self: Pin<&mut Self>,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::io::Result<()>> {
+        fn poll_shutdown(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<std::io::Result<()>> {
             Poll::Ready(Ok(()))
         }
     }
@@ -155,10 +152,20 @@ mod tests {
         let (session, _rx) = Session::new(Arc::new(DummyTransport));
 
         session
-            .handle_goaway(&Goaway { new_session_uri: None }, false)
+            .handle_goaway(
+                &Goaway {
+                    new_session_uri: None,
+                },
+                false,
+            )
             .unwrap();
         let err = session
-            .handle_goaway(&Goaway { new_session_uri: None }, false)
+            .handle_goaway(
+                &Goaway {
+                    new_session_uri: None,
+                },
+                false,
+            )
             .unwrap_err();
         match err {
             Error::ProtocolViolation { .. } => {}
@@ -189,7 +196,12 @@ mod tests {
     fn server_accepts_no_uri_sets_state() {
         let (session, _rx) = Session::new(Arc::new(DummyTransport));
         session
-            .handle_goaway(&Goaway { new_session_uri: None }, true)
+            .handle_goaway(
+                &Goaway {
+                    new_session_uri: None,
+                },
+                true,
+            )
             .unwrap();
 
         let state = session.state.lock().unwrap();

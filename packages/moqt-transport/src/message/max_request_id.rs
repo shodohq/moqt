@@ -25,7 +25,7 @@ pub struct MaxRequestId {
 
 impl MaxRequestId {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
         vi.encode(self.request_id, buf)?;
         Ok(())
     }
@@ -33,7 +33,7 @@ impl MaxRequestId {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
         let request_id = vi
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "request id"))?;

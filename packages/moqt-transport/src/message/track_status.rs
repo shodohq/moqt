@@ -15,7 +15,7 @@ impl TrackStatus {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         if !matches!(self.status_code, 0x00 | 0x01 | 0x02 | 0x03 | 0x04) {
             return Err(IoError::new(ErrorKind::InvalidData, "invalid status code").into());
@@ -51,7 +51,7 @@ impl TrackStatus {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         let request_id = vi
             .decode(buf)?
@@ -180,7 +180,7 @@ mod tests {
     #[test]
     fn decode_fails_on_invalid_status_code() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         vi.encode(0x09, &mut buf).unwrap(); // invalid status code
         Location {
@@ -197,7 +197,7 @@ mod tests {
     #[test]
     fn decode_fails_on_nonzero_fields_for_not_started() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         vi.encode(0x02, &mut buf).unwrap(); // status code (not yet begun)
         Location {

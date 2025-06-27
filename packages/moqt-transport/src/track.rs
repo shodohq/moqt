@@ -1,11 +1,11 @@
 use bytes::Bytes;
-use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
-use std::sync::atomic::{AtomicU64, Ordering};
-use tokio::sync::mpsc;
 use futures_core::Stream;
+use std::collections::HashMap;
 use std::pin::Pin;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
+use tokio::sync::mpsc;
 
 use crate::error::Error;
 use crate::message::SubscribeOk;
@@ -69,7 +69,11 @@ impl TrackManager {
 
     /// Associate an alias with an existing track. Returns an error on
     /// duplication.
-    pub(crate) fn set_track_alias(&self, name: &FullTrackName, alias: TrackAlias) -> Result<(), Error> {
+    pub(crate) fn set_track_alias(
+        &self,
+        name: &FullTrackName,
+        alias: TrackAlias,
+    ) -> Result<(), Error> {
         self.assign_alias(alias, name.clone())?;
         if let Some(entry) = self.tracks.write().unwrap().get_mut(name) {
             let mut state = entry.lock().unwrap();
@@ -104,7 +108,9 @@ impl TrackManager {
             let mut reqs = self.requests.write().unwrap();
             reqs.remove(&ok.request_id)
         };
-        let name = name.ok_or_else(|| Error::ProtocolViolation { reason: "unknown request".into() })?;
+        let name = name.ok_or_else(|| Error::ProtocolViolation {
+            reason: "unknown request".into(),
+        })?;
         self.set_track_alias(&name, ok.track_alias)
     }
 }
@@ -157,7 +163,9 @@ mod tests {
         let manager = TrackManager::default();
         manager.add_track("video".to_string());
         assert!(manager.set_track_alias(&"video".to_string(), 1).is_ok());
-        let err = manager.set_track_alias(&"video".to_string(), 1).unwrap_err();
+        let err = manager
+            .set_track_alias(&"video".to_string(), 1)
+            .unwrap_err();
         match err {
             Error::DuplicateTrackAlias(1) => {}
             e => panic!("unexpected error: {:?}", e),
@@ -184,7 +192,10 @@ mod tests {
     fn subscribe_creates_mapping() {
         let manager = TrackManager::default();
         let (id, mut stream) = manager.subscribe_track("video".to_string());
-        assert_eq!(manager.requests.read().unwrap().get(&id), Some(&"video".to_string()));
+        assert_eq!(
+            manager.requests.read().unwrap().get(&id),
+            Some(&"video".to_string())
+        );
         drop(stream);
     }
 

@@ -36,7 +36,7 @@ impl Goaway {
     pub const MAX_URI_LENGTH: usize = 8_192;
 
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // New Session URI
         if let Some(uri) = &self.new_session_uri {
@@ -57,7 +57,7 @@ impl Goaway {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::coding::VarInt;
+        let mut vi = crate::codec::VarInt;
 
         // New Session URI
         let len = vi
@@ -134,8 +134,9 @@ mod tests {
     #[test]
     fn decode_fails_on_long_uri() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::coding::VarInt;
-        vi.encode((Goaway::MAX_URI_LENGTH + 1) as u64, &mut buf).unwrap();
+        let mut vi = crate::codec::VarInt;
+        vi.encode((Goaway::MAX_URI_LENGTH + 1) as u64, &mut buf)
+            .unwrap();
         buf.extend(std::iter::repeat(b'a').take(Goaway::MAX_URI_LENGTH + 1));
 
         match Goaway::decode(&mut buf) {
