@@ -22,6 +22,13 @@ impl SubscribeOk {
         vi.encode(self.track_alias, buf)?;
         vi.encode(self.expires, buf)?;
 
+        if self.group_order == 0 || self.group_order > 2 {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid group order",
+            )
+            .into());
+        }
         buf.put_u8(self.group_order);
         buf.put_u8(if self.content_exists { 1 } else { 0 });
 
@@ -62,6 +69,9 @@ impl SubscribeOk {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "flags").into());
         }
         let group_order = buf.split_to(1)[0];
+        if group_order == 0 || group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
         let content_exists_byte = buf.split_to(1)[0];
         let content_exists = match content_exists_byte {
             0 => false,

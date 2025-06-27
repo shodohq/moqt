@@ -26,6 +26,9 @@ impl Fetch {
 
         vi.encode(self.request_id, buf)?;
         buf.put_u8(self.subscriber_priority);
+        if self.group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
         buf.put_u8(self.group_order);
         vi.encode(self.fetch_type, buf)?;
 
@@ -92,6 +95,9 @@ impl Fetch {
         }
         let subscriber_priority = buf.split_to(1)[0];
         let group_order = buf.split_to(1)[0];
+        if group_order > 2 {
+            return Err(IoError::new(ErrorKind::InvalidData, "invalid group order").into());
+        }
 
         let fetch_type = vi
             .decode(buf)?
