@@ -1,4 +1,4 @@
-use bytes::{BufMut, BytesMut};
+use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
 use crate::model::Parameter;
@@ -81,6 +81,7 @@ impl ServerSetup {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::BufMut;
 
     #[test]
     fn encode_decode_roundtrip() {
