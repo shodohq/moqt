@@ -24,6 +24,9 @@ pub enum Error {
     #[error("unknown message type")]
     UnknownMessageType,
 
+    #[error("too many requests")]
+    TooManyRequests,
+
     #[error("std::io::Error")]
     Io(#[from] std::io::Error),
 }

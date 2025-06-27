@@ -19,6 +19,7 @@ pub struct TrackManager {
     aliases: RwLock<HashMap<TrackAlias, FullTrackName>>,
     requests: RwLock<HashMap<u64, FullTrackName>>,
     request_counter: AtomicU64,
+    max_request_id: AtomicU64,
 }
 
 impl Default for TrackManager {
@@ -28,6 +29,7 @@ impl Default for TrackManager {
             aliases: RwLock::new(HashMap::new()),
             requests: RwLock::new(HashMap::new()),
             request_counter: AtomicU64::new(0),
+            max_request_id: AtomicU64::new(0),
         }
     }
 }
@@ -62,9 +64,15 @@ impl TrackManager {
         Ok(())
     }
 
-    /// Generate a new unique request identifier.
-    pub fn new_request_id(&self) -> u64 {
-        self.request_counter.fetch_add(1, Ordering::SeqCst)
+    /// Generate a new unique request identifier. Returns an error if the peer
+    /// has not allowed opening additional requests.
+    pub fn new_request_id(&self) -> Result<u64, Error> {
+        let next = self.request_counter.load(Ordering::SeqCst);
+        let max = self.max_request_id.load(Ordering::SeqCst);
+        if next >= max {
+            return Err(Error::TooManyRequests);
+        }
+        Ok(self.request_counter.fetch_add(1, Ordering::SeqCst))
     }
 
     /// Associate an alias with an existing track. Returns an error on
@@ -87,10 +95,23 @@ impl TrackManager {
         aliases.get(&alias).cloned()
     }
 
+    /// Update the maximum request ID permitted by the peer. The provided value
+    /// MUST be strictly greater than any previously received value.
+    pub fn handle_max_request_id(&self, new_max: u64) -> Result<(), Error> {
+        let current = self.max_request_id.load(Ordering::SeqCst);
+        if new_max <= current {
+            return Err(Error::ProtocolViolation {
+                reason: "MAX_REQUEST_ID decreased".into(),
+            });
+        }
+        self.max_request_id.store(new_max, Ordering::SeqCst);
+        Ok(())
+    }
+
     /// Start a new subscription to the given track name. Returns the request id and a stream of objects.
-    pub fn subscribe_track(&self, name: FullTrackName) -> (u64, ObjectStream) {
+    pub fn subscribe_track(&self, name: FullTrackName) -> Result<(u64, ObjectStream), Error> {
         self.add_track(name.clone());
-        let request_id = self.new_request_id();
+        let request_id = self.new_request_id()?;
         let (tx, rx) = mpsc::channel(16);
 
         if let Some(entry) = self.tracks.read().unwrap().get(&name) {
@@ -99,7 +120,7 @@ impl TrackManager {
         }
 
         self.requests.write().unwrap().insert(request_id, name);
-        (request_id, ObjectStream { rx })
+        Ok((request_id, ObjectStream { rx }))
     }
 
     /// Process SUBSCRIBE_OK by registering the alias and clearing pending state.
@@ -183,15 +204,17 @@ mod tests {
     #[test]
     fn request_id_increments() {
         let manager = TrackManager::default();
-        let first = manager.new_request_id();
-        let second = manager.new_request_id();
+        manager.handle_max_request_id(10).unwrap();
+        let first = manager.new_request_id().unwrap();
+        let second = manager.new_request_id().unwrap();
         assert!(second > first);
     }
 
     #[test]
     fn subscribe_creates_mapping() {
         let manager = TrackManager::default();
-        let (id, mut stream) = manager.subscribe_track("video".to_string());
+        manager.handle_max_request_id(10).unwrap();
+        let (id, stream) = manager.subscribe_track("video".to_string()).unwrap();
         assert_eq!(
             manager.requests.read().unwrap().get(&id),
             Some(&"video".to_string())
@@ -202,7 +225,8 @@ mod tests {
     #[test]
     fn handle_subscribe_ok_sets_alias() {
         let manager = TrackManager::default();
-        let (id, _stream) = manager.subscribe_track("audio".to_string());
+        manager.handle_max_request_id(10).unwrap();
+        let (id, _stream) = manager.subscribe_track("audio".to_string()).unwrap();
         let ok = SubscribeOk {
             request_id: id,
             track_alias: 7,
@@ -214,5 +238,28 @@ mod tests {
         };
         manager.handle_subscribe_ok(&ok).unwrap();
         assert_eq!(manager.resolve_alias(7).as_deref(), Some("audio"));
+    }
+
+    #[test]
+    fn max_request_id_must_increase() {
+        let manager = TrackManager::default();
+        manager.handle_max_request_id(10).unwrap();
+        let err = manager.handle_max_request_id(5).unwrap_err();
+        match err {
+            Error::ProtocolViolation { .. } => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
+    }
+
+    #[test]
+    fn new_request_id_respects_limit() {
+        let manager = TrackManager::default();
+        manager.handle_max_request_id(1).unwrap();
+        let _ = manager.new_request_id().unwrap();
+        let err = manager.new_request_id().unwrap_err();
+        match err {
+            Error::TooManyRequests => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
     }
 }
