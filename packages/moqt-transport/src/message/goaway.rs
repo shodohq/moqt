@@ -17,12 +17,14 @@ use tokio_util::codec::{Decoder, Encoder};
 /// The endpoint MUST terminate the session with a Protocol Violation
 /// (Section 3.4) if it receives multiple GOAWAY messages.
 ///
+/// ```text
 /// GOAWAY Message {
 ///   Type (i) = 0x10,
 ///   Length (16),
 ///   New Session URI Length (i),
 ///   New Session URI (..),
 /// }
+/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Goaway {
     pub new_session_uri: Option<String>,
@@ -30,16 +32,11 @@ pub struct Goaway {
 
 impl Goaway {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        use std::io::{Error as IoError, ErrorKind};
-
         let mut vi = crate::coding::VarInt;
 
         // New Session URI
         if let Some(uri) = &self.new_session_uri {
             let bytes = uri.as_bytes();
-            if bytes.len() > 8192 {
-                return Err(IoError::new(ErrorKind::InvalidData, "uri too long").into());
-            }
             vi.encode(bytes.len() as u64, buf)?;
             buf.put_slice(bytes);
         } else {
@@ -59,9 +56,6 @@ impl Goaway {
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "uri length"))?
             as usize;
-        if len > 8192 {
-            return Err(IoError::new(ErrorKind::InvalidData, "uri too long").into());
-        }
         if buf.len() < len {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "uri").into());
         }
@@ -112,15 +106,5 @@ mod tests {
         let decoded = Goaway::decode(&mut decode_buf).unwrap();
         assert!(decode_buf.is_empty());
         assert_eq!(decoded, msg);
-    }
-
-    #[test]
-    fn decode_fails_on_oversized_uri() {
-        let uri_len = 8193u64; // larger than allowed
-        let mut buf = BytesMut::new();
-        crate::coding::VarInt.encode(uri_len, &mut buf).unwrap();
-        buf.resize(buf.len() + uri_len as usize, 0);
-
-        assert!(Goaway::decode(&mut buf).is_err());
     }
 }

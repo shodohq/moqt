@@ -1,7 +1,7 @@
 use bytes::{BufMut, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
-use crate::model::SetupParameter;
+use crate::model::Parameter;
 
 /// SERVER_SETUP
 ///
@@ -16,6 +16,7 @@ use crate::model::SetupParameter;
 /// ensure future extensibility of MOQT, endpoints MUST ignore unknown
 /// setup parameters.  TODO: describe GREASE for those.
 ///
+/// ```text
 /// SERVER_SETUP Message {
 ///   Type (i) = 0x21,
 ///   Length (16),
@@ -23,10 +24,11 @@ use crate::model::SetupParameter;
 ///   Number of Parameters (i),
 ///   Setup Parameters (..) ...,
 /// }
+/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ServerSetup {
     pub selected_version: u32,
-    pub setup_parameters: Vec<SetupParameter>,
+    pub setup_parameters: Vec<Parameter>,
 }
 
 impl ServerSetup {
@@ -76,7 +78,7 @@ impl ServerSetup {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(SetupParameter {
+            parameters.push(Parameter {
                 parameter_type: ty,
                 value,
             });
@@ -98,11 +100,11 @@ mod tests {
         let msg = ServerSetup {
             selected_version: 1,
             setup_parameters: vec![
-                SetupParameter {
+                Parameter {
                     parameter_type: 0x02,
                     value: vec![5],
                 },
-                SetupParameter {
+                Parameter {
                     parameter_type: 0x04,
                     value: vec![1, 2],
                 },

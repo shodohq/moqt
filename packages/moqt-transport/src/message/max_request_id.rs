@@ -11,11 +11,13 @@ use tokio_util::codec::{Decoder, Encoder};
 /// receipt of a MAX_REQUEST_ID message with an equal or smaller Request
 /// ID value is a 'Protocol Violation'.
 ///
+/// ```text
 /// MAX_REQUEST_ID Message {
 ///   Type (i) = 0x15,
 ///   Length (16),
 ///   Request ID (i),
 /// }
+/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MaxRequestId {
     pub request_id: u64,

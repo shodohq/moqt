@@ -1,12 +1,6 @@
 use tokio_util::codec::{Decoder, Encoder};
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct SetupParameter {
-    pub parameter_type: u64,
-    pub value: Vec<u8>,
-}
-
-#[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Parameter {
     pub parameter_type: u64,
     pub value: Vec<u8>,

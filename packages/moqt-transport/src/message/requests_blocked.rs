@@ -1,26 +1,38 @@
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
-/// Representation of the REQUESTS_BLOCKED message body.
+/// REQUESTS_BLOCKED
 ///
-/// This message carries the maximum request ID advertised by the peer when the
-/// sender became blocked.  It consists of a single variable-length integer
-/// value.
+/// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-requests_blocked
+///
+/// The REQUESTS_BLOCKED message is sent when an endpoint would like to
+/// send a new request, but cannot because the Request ID would exceed
+/// the Maximum Request ID value sent by the peer.  The endpoint SHOULD
+/// send only one REQUESTS_BLOCKED for a given Maximum Request ID.
+/// An endpoint MAY send a MAX_REQUEST_ID upon receipt of
+/// REQUESTS_BLOCKED, but it MUST NOT rely on REQUESTS_BLOCKED to trigger
+/// sending a MAX_REQUEST_ID, because sending REQUESTS_BLOCKED is not
+/// required.
+///
+/// ```text
+/// REQUESTS_BLOCKED Message {
+///   Type (i) = 0x1A,
+///   Length (16),
+///   Maximum Request ID (i),
+/// }
+/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct RequestsBlocked {
-    /// The maximum request ID value that caused the sender to become blocked.
     pub maximum_request_id: u64,
 }
 
 impl RequestsBlocked {
-    /// Encode the REQUESTS_BLOCKED message body into the provided buffer.
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::coding::VarInt;
         vi.encode(self.maximum_request_id, buf)?;
         Ok(())
     }
 
-    /// Decode a REQUESTS_BLOCKED message body from the provided buffer.
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 

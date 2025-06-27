@@ -1,7 +1,7 @@
 use bytes::{BufMut, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
-use crate::model::SetupParameter;
+use crate::model::Parameter;
 
 /// CLIENT_SETUP
 ///
@@ -16,6 +16,7 @@ use crate::model::SetupParameter;
 /// ensure future extensibility of MOQT, endpoints MUST ignore unknown
 /// setup parameters.  TODO: describe GREASE for those.
 ///
+/// ```text
 /// CLIENT_SETUP Message {
 ///   Type (i) = 0x20,
 ///   Length (16),
@@ -24,10 +25,11 @@ use crate::model::SetupParameter;
 ///   Number of Parameters (i),
 ///   Setup Parameters (..) ...,
 /// }
+/// ```
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct ClientSetup {
     pub supported_versions: Vec<u32>,
-    pub setup_parameters: Vec<SetupParameter>,
+    pub setup_parameters: Vec<Parameter>,
 }
 
 impl ClientSetup {
@@ -87,7 +89,7 @@ impl ClientSetup {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(SetupParameter {
+            parameters.push(Parameter {
                 parameter_type: ty,
                 value,
             });
@@ -103,18 +105,18 @@ impl ClientSetup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::model::SetupParameter;
+    use crate::model::Parameter;
 
     #[test]
     fn encode_decode_roundtrip() {
         let msg = ClientSetup {
             supported_versions: vec![1, 0xff00000d],
             setup_parameters: vec![
-                SetupParameter {
+                Parameter {
                     parameter_type: 0x01,
                     value: b"/".to_vec(),
                 },
-                SetupParameter {
+                Parameter {
                     parameter_type: 0x02,
                     value: vec![5],
                 },
