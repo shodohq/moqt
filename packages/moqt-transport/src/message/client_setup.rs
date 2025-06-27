@@ -45,9 +45,7 @@ impl ClientSetup {
         // Setup Parameters
         vi.encode(self.setup_parameters.len() as u64, buf)?;
         for p in &self.setup_parameters {
-            vi.encode(p.parameter_type, buf)?;
-            vi.encode(p.value.len() as u64, buf)?;
-            buf.put_slice(&p.value);
+            p.encode(buf)?;
         }
 
         Ok(())
@@ -68,6 +66,9 @@ impl ClientSetup {
             let v = vi
                 .decode(buf)?
                 .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "version"))?;
+            if v > u32::MAX as u64 {
+                return Err(crate::error::Error::VarIntRange);
+            }
             versions.push(v as u32);
         }
 
@@ -78,21 +79,7 @@ impl ClientSetup {
             as usize;
         let mut parameters = Vec::with_capacity(params_len);
         for _ in 0..params_len {
-            let ty = vi
-                .decode(buf)?
-                .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter type"))?;
-            let len = vi
-                .decode(buf)?
-                .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter length"))?
-                as usize;
-            if buf.len() < len {
-                return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
-            }
-            let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter {
-                parameter_type: ty,
-                value,
-            });
+            parameters.push(Parameter::decode(buf)?);
         }
 
         Ok(ClientSetup {
