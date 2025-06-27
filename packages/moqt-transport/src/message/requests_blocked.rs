@@ -65,6 +65,22 @@ mod tests {
     }
 
     #[test]
+    fn encode_decode_roundtrip_large_id() {
+        // use a value that requires the largest varint encoding
+        let msg = RequestsBlocked {
+            maximum_request_id: 0x1234_5678_9abc_def0,
+        };
+
+        let mut buf = BytesMut::new();
+        msg.encode(&mut buf).unwrap();
+
+        let mut decode_buf = buf.clone();
+        let decoded = RequestsBlocked::decode(&mut decode_buf).unwrap();
+        assert!(decode_buf.is_empty());
+        assert_eq!(decoded, msg);
+    }
+
+    #[test]
     fn decode_incomplete() {
         let mut buf = BytesMut::new();
         match RequestsBlocked::decode(&mut buf) {
