@@ -17,6 +17,7 @@ pub enum State {
 pub struct Session<T: Transport> {
     state: Arc<Mutex<State>>,
     received_goaway: Arc<Mutex<bool>>,
+    max_request_id: Arc<Mutex<u64>>,
     pub(crate) control_tx: mpsc::Sender<ControlMessage>,
     pub track_manager: TrackManager,
     pub transport: Arc<T>,
@@ -28,6 +29,7 @@ impl<T: Transport> Session<T> {
         let session = Session {
             state: Arc::new(Mutex::new(State::Initializing)),
             received_goaway: Arc::new(Mutex::new(false)),
+            max_request_id: Arc::new(Mutex::new(0)),
             control_tx: tx,
             track_manager: TrackManager::default(),
             transport,
@@ -64,6 +66,21 @@ impl<T: Transport> Session<T> {
         let mut state = self.state.lock().unwrap();
         *state = State::Closing;
 
+        Ok(())
+    }
+
+    /// Process an incoming MAX_REQUEST_ID message.
+    ///
+    /// The provided Request ID value MUST be greater than any previously
+    /// received value, otherwise this returns a `ProtocolViolation` error.
+    pub fn handle_max_request_id(&self, msg: &crate::message::MaxRequestId) -> Result<(), Error> {
+        let mut max = self.max_request_id.lock().unwrap();
+        if msg.request_id <= *max {
+            return Err(Error::ProtocolViolation {
+                reason: "MAX_REQUEST_ID decreased".into(),
+            });
+        }
+        *max = msg.request_id;
         Ok(())
     }
 }
@@ -197,5 +214,27 @@ mod tests {
         session
             .handle_goaway(&Goaway { new_session_uri: None }, true)
             .unwrap();
+    }
+
+    #[test]
+    fn max_request_id_must_increase() {
+        let (session, _rx) = Session::new(Arc::new(DummyTransport));
+
+        session
+            .handle_max_request_id(&crate::message::MaxRequestId { request_id: 5 })
+            .unwrap();
+
+        session
+            .handle_max_request_id(&crate::message::MaxRequestId { request_id: 6 })
+            .unwrap();
+
+        let err = session
+            .handle_max_request_id(&crate::message::MaxRequestId { request_id: 6 })
+            .unwrap_err();
+
+        match err {
+            Error::ProtocolViolation { .. } => {}
+            e => panic!("unexpected error: {:?}", e),
+        }
     }
 }
