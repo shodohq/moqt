@@ -336,6 +336,7 @@ impl Decoder for Codec {
 }
 
 /// Variable-Length Integer Encoding
+///
 /// https://datatracker.ietf.org/doc/html/rfc9000#name-variable-length-integer-enc
 pub struct VarInt;
 

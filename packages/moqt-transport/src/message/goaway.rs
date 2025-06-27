@@ -1,23 +1,40 @@
 use bytes::{BufMut, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
-/// Representation of a GOAWAY message body.
+/// GOAWAY
 ///
-/// The message optionally carries a new session URI.  When the length is
-/// `0`, the current session URI is reused.
+/// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-goaway
+///
+/// An endpoint sends a GOAWAY message to inform the peer it intends to
+/// close the session soon.  Servers can use GOAWAY to initiate session
+/// migration (Section 3.5) with an optional URI.
+/// The GOAWAY message does not impact subscription state.  A subscriber
+/// SHOULD individually UNSUBSCRIBE for each existing subscription, while
+/// a publisher MAY reject new requests while in the draining state.
+/// Upon receiving a GOAWAY, an endpoint SHOULD NOT initiate new requests
+/// to the peer including SUBSCRIBE, PUBLISH, FETCH, ANNOUNCE and
+/// SUBSCRIBE_ANNOUNCE.
+/// The endpoint MUST terminate the session with a Protocol Violation
+/// (Section 3.4) if it receives multiple GOAWAY messages.
+///
+/// GOAWAY Message {
+///   Type (i) = 0x10,
+///   Length (16),
+///   New Session URI Length (i),
+///   New Session URI (..),
+/// }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Goaway {
-    /// Optional URI for the new session.
     pub new_session_uri: Option<String>,
 }
 
 impl Goaway {
-    /// Encode the GOAWAY message body into the provided buffer.
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;
 
+        // New Session URI
         if let Some(uri) = &self.new_session_uri {
             let bytes = uri.as_bytes();
             if bytes.len() > 8192 {
@@ -32,25 +49,22 @@ impl Goaway {
         Ok(())
     }
 
-    /// Decode a GOAWAY message body from the provided buffer.
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;
 
+        // New Session URI
         let len = vi
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "uri length"))?
             as usize;
-
         if len > 8192 {
             return Err(IoError::new(ErrorKind::InvalidData, "uri too long").into());
         }
-
         if buf.len() < len {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "uri").into());
         }
-
         let value = buf.split_to(len);
         let new_session_uri = if len == 0 {
             None

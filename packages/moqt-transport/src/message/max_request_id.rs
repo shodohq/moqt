@@ -1,6 +1,21 @@
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
+/// MAX_REQUEST_ID
+///
+/// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-max_request_id-2
+///
+/// An endpoint sends a MAX_REQUEST_ID message to increase the number of
+/// requests the peer can send within a session.
+/// The Maximum Request ID MUST only increase within a session, and
+/// receipt of a MAX_REQUEST_ID message with an equal or smaller Request
+/// ID value is a 'Protocol Violation'.
+///
+/// MAX_REQUEST_ID Message {
+///   Type (i) = 0x15,
+///   Length (16),
+///   Request ID (i),
+/// }
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct MaxRequestId {
     pub request_id: u64,
