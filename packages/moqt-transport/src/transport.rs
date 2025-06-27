@@ -1,6 +1,7 @@
 use std::future::Future;
 use std::pin::Pin;
 use tokio::io::{AsyncRead, AsyncWrite};
+use bytes::Bytes;
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -31,4 +32,9 @@ pub trait Transport: Send + Sync {
     fn accept_bi_stream(
         &mut self,
     ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
+
+    fn send_datagram(
+        &mut self,
+        data: Bytes,
+    ) -> Pin<Box<dyn Future<Output = Result<(), BoxError>> + Send>>;
 }

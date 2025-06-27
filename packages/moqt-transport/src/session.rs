@@ -154,6 +154,13 @@ mod tests {
         ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>> {
             Box::pin(async { unimplemented!() })
         }
+
+        fn send_datagram(
+            &mut self,
+            _data: bytes::Bytes,
+        ) -> Pin<Box<dyn Future<Output = Result<(), BoxError>> + Send>> {
+            Box::pin(async { Ok(()) })
+        }
     }
 
     #[test]
