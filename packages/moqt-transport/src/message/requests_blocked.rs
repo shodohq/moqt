@@ -101,4 +101,18 @@ mod tests {
             r => panic!("unexpected result: {:?}", r),
         }
     }
+
+    #[test]
+    fn encode_fails_on_too_large_id() {
+        // values >= 2^62 cannot be encoded as a varint
+        let msg = RequestsBlocked {
+            maximum_request_id: 1u64 << 62,
+        };
+
+        let mut buf = BytesMut::new();
+        match msg.encode(&mut buf) {
+            Err(crate::error::Error::VarIntRange) => {}
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }
