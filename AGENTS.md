@@ -1,6 +1,7 @@
 # AGENT Instructions
 
 This repository is a Rust workspace for the Media over QUIC Transport project.
+The detailed protocol specification is available in `draft-ietf-moq-transport-12.txt`.
 
 ## Programmatic Checks
 Run the following commands before committing changes:
