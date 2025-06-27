@@ -62,6 +62,36 @@ mod tests {
     }
 
     #[test]
+    fn encode_decode_roundtrip_large_id() {
+        // use a value that requires the largest varint encoding
+        let msg = MaxRequestId {
+            request_id: 0x1234_5678_9abc_def0,
+        };
+
+        let mut buf = BytesMut::new();
+        msg.encode(&mut buf).unwrap();
+
+        let mut decode_buf = buf.clone();
+        let decoded = MaxRequestId::decode(&mut decode_buf).unwrap();
+        assert!(decode_buf.is_empty());
+        assert_eq!(decoded, msg);
+    }
+
+    #[test]
+    fn encode_fails_on_too_large_id() {
+        // values >= 2^62 cannot be encoded as a varint
+        let msg = MaxRequestId {
+            request_id: 1u64 << 62,
+        };
+
+        let mut buf = BytesMut::new();
+        match msg.encode(&mut buf) {
+            Err(crate::error::Error::VarIntRange) => {}
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
+
+    #[test]
     fn decode_incomplete() {
         let mut buf = BytesMut::new();
         match MaxRequestId::decode(&mut buf) {
