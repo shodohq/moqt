@@ -71,11 +71,7 @@ impl<T: Transport> Session<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::{
-        future::Future,
-        pin::Pin,
-        task::{Context, Poll},
-    };
+    use std::task::{Context, Poll};
     use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
     use crate::transport::{BiStream, BoxError};
 
@@ -127,39 +123,29 @@ mod tests {
     #[derive(Clone)]
     struct DummyTransport;
 
+    #[async_trait::async_trait]
     impl Transport for DummyTransport {
         type Uni = DummyStream;
         type Bi = DummyBi;
 
-        fn open_uni_stream(
-            &mut self,
-        ) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>> {
-            Box::pin(async { unimplemented!() })
+        async fn open_uni_stream(&mut self) -> Result<Self::Uni, BoxError> {
+            unimplemented!()
         }
 
-        fn accept_uni_stream(
-            &mut self,
-        ) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>> {
-            Box::pin(async { unimplemented!() })
+        async fn accept_uni_stream(&mut self) -> Result<Self::Uni, BoxError> {
+            unimplemented!()
         }
 
-        fn open_bi_stream(
-            &mut self,
-        ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>> {
-            Box::pin(async { unimplemented!() })
+        async fn open_bi_stream(&mut self) -> Result<Self::Bi, BoxError> {
+            unimplemented!()
         }
 
-        fn accept_bi_stream(
-            &mut self,
-        ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>> {
-            Box::pin(async { unimplemented!() })
+        async fn accept_bi_stream(&mut self) -> Result<Self::Bi, BoxError> {
+            unimplemented!()
         }
 
-        fn send_datagram(
-            &mut self,
-            _data: bytes::Bytes,
-        ) -> Pin<Box<dyn Future<Output = Result<(), BoxError>> + Send>> {
-            Box::pin(async { Ok(()) })
+        async fn send_datagram(&mut self, _data: bytes::Bytes) -> Result<(), BoxError> {
+            Ok(())
         }
     }
 

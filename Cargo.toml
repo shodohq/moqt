@@ -22,3 +22,4 @@ bytes = "1.8"
 thiserror = "2.0"
 tokio = "1.45"
 tokio-util = { version = "0.7", features = ["codec"] }
+async-trait = "0.1"
