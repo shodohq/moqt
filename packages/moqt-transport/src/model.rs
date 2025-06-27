@@ -20,7 +20,7 @@ pub struct Location {
 
 impl Location {
     pub fn encode(&self, buf: &mut bytes::BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         vi.encode(self.group, buf)?;
         vi.encode(self.object, buf)?;
         Ok(())
@@ -29,7 +29,7 @@ impl Location {
     pub fn decode(buf: &mut bytes::BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         let group = vi
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "location group"))?;

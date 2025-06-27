@@ -31,7 +31,7 @@ pub struct ServerSetup {
 
 impl ServerSetup {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         // Selected Version
         vi.encode(self.selected_version as u64, buf)?;
@@ -50,7 +50,7 @@ impl ServerSetup {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         // Selected Version
         let version = vi

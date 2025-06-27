@@ -13,7 +13,7 @@ impl SubscribeDone {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         vi.encode(self.request_id, buf)?;
         vi.encode(self.status_code, buf)?;
@@ -32,7 +32,7 @@ impl SubscribeDone {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         let request_id = vi
             .decode(buf)?
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     fn decode_fails_on_oversized_reason() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         vi.encode(2, &mut buf).unwrap(); // status_code
         vi.encode(3, &mut buf).unwrap(); // stream_count
@@ -124,7 +124,7 @@ mod tests {
     #[test]
     fn decode_incomplete() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         vi.encode(10, &mut buf).unwrap(); // request id only
 
         match SubscribeDone::decode(&mut buf) {

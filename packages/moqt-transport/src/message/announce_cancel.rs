@@ -14,7 +14,7 @@ pub struct AnnounceCancel {
 
 impl AnnounceCancel {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         vi.encode(self.track_namespace, buf)?;
         vi.encode(self.error_code, buf)?;
@@ -29,7 +29,7 @@ impl AnnounceCancel {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         let track_namespace = vi
             .decode(buf)?

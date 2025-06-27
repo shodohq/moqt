@@ -18,9 +18,17 @@ pub trait Transport: Send + Sync {
     type Uni: UniStream;
     type Bi: BiStream;
 
-    fn open_uni_stream(&mut self) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>>;
-    fn accept_uni_stream(&mut self) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>>;
+    fn open_uni_stream(
+        &mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>>;
+    fn accept_uni_stream(
+        &mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>>;
 
-    fn open_bi_stream(&mut self) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
-    fn accept_bi_stream(&mut self) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
+    fn open_bi_stream(
+        &mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
+    fn accept_bi_stream(
+        &mut self,
+    ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
 }

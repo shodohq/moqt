@@ -1,11 +1,7 @@
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
-use crate::{
-    message::ControlMessage,
-    transport::Transport,
-    track::TrackManager,
-};
+use crate::{message::ControlMessage, track::TrackManager, transport::Transport};
 
 pub enum State {
     Initializing,

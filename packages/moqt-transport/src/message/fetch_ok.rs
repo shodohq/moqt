@@ -14,7 +14,7 @@ pub struct FetchOk {
 
 impl FetchOk {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         vi.encode(self.request_id, buf)?;
         buf.put_u8(self.group_order);
@@ -35,7 +35,7 @@ impl FetchOk {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         let request_id = vi
             .decode(buf)?
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn decode_fails_on_invalid_group_order() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         buf.put_u8(3); // invalid group order
         buf.put_u8(0); // end_of_track
@@ -148,7 +148,7 @@ mod tests {
     #[test]
     fn decode_incomplete() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         vi.encode(10, &mut buf).unwrap(); // only request_id
 
         match FetchOk::decode(&mut buf) {

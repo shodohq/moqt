@@ -10,7 +10,7 @@ pub type TrackAlias = u64;
 #[derive(Default)]
 pub struct TrackManager {
     tracks: RwLock<HashMap<FullTrackName, Arc<TrackState>>>,
-    aliases: RwLock<HashMap<TrackAlias, FullTrackName>>, 
+    aliases: RwLock<HashMap<TrackAlias, FullTrackName>>,
 }
 
 struct TrackState {

@@ -32,7 +32,7 @@ impl Goaway {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         // New Session URI
         if let Some(uri) = &self.new_session_uri {
@@ -52,7 +52,7 @@ impl Goaway {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         // New Session URI
         let len = vi
@@ -118,7 +118,7 @@ mod tests {
     fn decode_fails_on_oversized_uri() {
         let uri_len = 8193u64; // larger than allowed
         let mut buf = BytesMut::new();
-        crate::codec::VarInt.encode(uri_len, &mut buf).unwrap();
+        crate::coding::VarInt.encode(uri_len, &mut buf).unwrap();
         buf.resize(buf.len() + uri_len as usize, 0);
 
         assert!(Goaway::decode(&mut buf).is_err());

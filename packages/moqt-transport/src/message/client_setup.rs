@@ -32,7 +32,7 @@ pub struct ClientSetup {
 
 impl ClientSetup {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         // Supported Versions
         vi.encode(self.supported_versions.len() as u64, buf)?;
@@ -54,7 +54,7 @@ impl ClientSetup {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         // Supported Versions
         let versions_len = vi

@@ -14,7 +14,7 @@ impl SubscribeAnnounces {
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         if self.track_namespace_prefix.is_empty() || self.track_namespace_prefix.len() > 32 {
             return Err(IoError::new(ErrorKind::InvalidData, "invalid prefix length").into());
@@ -41,7 +41,7 @@ impl SubscribeAnnounces {
     pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
 
         let request_id = vi
             .decode(buf)?
@@ -141,7 +141,7 @@ mod tests {
     #[test]
     fn decode_fails_on_invalid_prefix_len() {
         let mut buf = BytesMut::new();
-        let mut vi = crate::codec::VarInt;
+        let mut vi = crate::coding::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         vi.encode(0, &mut buf).unwrap(); // invalid prefix length
         vi.encode(0, &mut buf).unwrap(); // parameters len
