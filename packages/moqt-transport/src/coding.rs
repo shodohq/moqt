@@ -27,203 +27,203 @@ impl Encoder<ControlMessage> for MoqCodec {
                 VarInt.encode(ControlMessageType::ClientSetup as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::ServerSetup(msg) => {
                 VarInt.encode(ControlMessageType::ServerSetup as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Subscribe(msg) => {
                 VarInt.encode(ControlMessageType::Subscribe as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeAnnounces(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeAnnounces as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeAnnouncesOk(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeAnnouncesOk as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeAnnouncesError(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeAnnouncesError as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeOk(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeOk as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeError(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeError as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeUpdate(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeUpdate as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Unsubscribe(msg) => {
                 VarInt.encode(ControlMessageType::Unsubscribe as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::UnsubscribeAnnounces(msg) => {
                 VarInt.encode(ControlMessageType::UnsubscribeAnnounces as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::SubscribeDone(msg) => {
                 VarInt.encode(ControlMessageType::SubscribeDone as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Publish(msg) => {
                 VarInt.encode(ControlMessageType::Publish as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::PublishOk(msg) => {
                 VarInt.encode(ControlMessageType::PublishOk as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::PublishError(msg) => {
                 VarInt.encode(ControlMessageType::PublishError as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Fetch(msg) => {
                 VarInt.encode(ControlMessageType::Fetch as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::FetchOk(msg) => {
                 VarInt.encode(ControlMessageType::FetchOk as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::FetchError(msg) => {
                 VarInt.encode(ControlMessageType::FetchError as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::FetchCancel(msg) => {
                 VarInt.encode(ControlMessageType::FetchCancel as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Goaway(msg) => {
                 VarInt.encode(ControlMessageType::Goaway as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::MaxRequestId(msg) => {
                 VarInt.encode(ControlMessageType::MaxRequestId as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::RequestsBlocked(msg) => {
                 VarInt.encode(ControlMessageType::RequestsBlocked as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::TrackStatus(msg) => {
                 VarInt.encode(ControlMessageType::TrackStatus as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::TrackStatusRequest(msg) => {
                 VarInt.encode(ControlMessageType::TrackStatusRequest as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Announce(msg) => {
                 VarInt.encode(ControlMessageType::Announce as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::AnnounceOk(msg) => {
                 VarInt.encode(ControlMessageType::AnnounceOk as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::AnnounceError(msg) => {
                 VarInt.encode(ControlMessageType::AnnounceError as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::Unannounce(msg) => {
                 VarInt.encode(ControlMessageType::Unannounce as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
             ControlMessage::AnnounceCancel(msg) => {
                 VarInt.encode(ControlMessageType::AnnounceCancel as u64, dst)?;
                 let mut buf = BytesMut::new();
                 msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
+                dst.put_u16(buf.len() as u16);
                 dst.put(buf);
             }
         }
@@ -240,10 +240,11 @@ impl Decoder for MoqCodec {
             Some(v) => v,
             None => return Ok(None),
         };
-        let len = match VarInt.decode(src)? {
-            Some(v) => v as usize,
-            None => return Ok(None),
-        };
+        if src.len() < 2 {
+            return Ok(None);
+        }
+        let len = ((src[0] as usize) << 8) | (src[1] as usize);
+        let _ = src.split_to(2);
         if src.len() < len {
             return Ok(None);
         }
@@ -425,6 +426,9 @@ mod tests {
     use super::VarInt;
     use bytes::BytesMut;
     use tokio_util::codec::{Decoder, Encoder};
+    use super::MoqCodec;
+    use crate::message::{ClientSetup, ControlMessage};
+    use crate::model::Parameter;
 
     #[test]
     fn encode_examples() {
@@ -476,5 +480,35 @@ mod tests {
         let mut buf = BytesMut::from(&b"\x40"[..]);
         assert!(VarInt.decode(&mut buf).unwrap().is_none());
         assert_eq!(buf.len(), 1);
+    }
+
+    #[test]
+    fn codec_encodes_length_as_u16() {
+        let setup = ClientSetup {
+            supported_versions: vec![1],
+            setup_parameters: vec![Parameter {
+                parameter_type: 0x01,
+                value: b"/".to_vec(),
+            }],
+        };
+        let msg = ControlMessage::ClientSetup(setup.clone());
+
+        let mut codec = MoqCodec;
+        let mut buf = BytesMut::new();
+        codec.encode(msg, &mut buf).unwrap();
+
+        // first byte is the message type
+        assert_eq!(buf[0], 0x20);
+        // next two bytes are the length
+        let len = ((buf[1] as usize) << 8) | (buf[2] as usize);
+        // remaining bytes should equal the reported length
+        assert_eq!(len, buf.len() - 3);
+
+        // decode round-trip
+        let decoded = codec.decode(&mut buf).unwrap().unwrap();
+        match decoded {
+            ControlMessage::ClientSetup(cs) => assert_eq!(cs, setup),
+            _ => panic!("unexpected message"),
+        }
     }
 }
