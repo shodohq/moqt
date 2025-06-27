@@ -150,4 +150,30 @@ mod tests {
             r => panic!("unexpected result: {:?}", r),
         }
     }
+
+    #[test]
+    fn codec_roundtrip() {
+        use crate::{coding::MoqCodec, message::ControlMessage};
+
+        let msg = ServerSetup {
+            selected_version: 1,
+            setup_parameters: vec![Parameter {
+                parameter_type: 0x02,
+                value: vec![5],
+            }],
+        };
+
+        let mut codec = MoqCodec;
+        let mut buf = BytesMut::new();
+        codec
+            .encode(ControlMessage::ServerSetup(msg.clone()), &mut buf)
+            .unwrap();
+
+        let decoded = codec.decode(&mut buf).unwrap().unwrap();
+        match decoded {
+            ControlMessage::ServerSetup(d) => assert_eq!(d, msg),
+            _ => panic!("unexpected message type"),
+        }
+        assert!(buf.is_empty());
+    }
 }
