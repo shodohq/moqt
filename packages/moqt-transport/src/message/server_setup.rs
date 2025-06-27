@@ -130,4 +130,24 @@ mod tests {
             r => panic!("unexpected result: {:?}", r),
         }
     }
+
+    #[test]
+    fn decode_incomplete_parameter_value() {
+        use bytes::BufMut;
+
+        let mut buf = BytesMut::new();
+        let mut vi = crate::coding::VarInt;
+        vi.encode(1, &mut buf).unwrap(); // selected_version
+        vi.encode(1, &mut buf).unwrap(); // number of parameters
+        vi.encode(0x02, &mut buf).unwrap(); // parameter type
+        vi.encode(3, &mut buf).unwrap(); // parameter length
+        buf.put_slice(&[1, 2]); // missing one byte of value
+
+        match ServerSetup::decode(&mut buf) {
+            Err(crate::error::Error::Io(e)) => {
+                assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+            }
+            r => panic!("unexpected result: {:?}", r),
+        }
+    }
 }
