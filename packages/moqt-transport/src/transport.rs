@@ -1,7 +1,6 @@
-use std::future::Future;
-use std::pin::Pin;
 use tokio::io::{AsyncRead, AsyncWrite};
 use bytes::Bytes;
+use async_trait::async_trait;
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -15,26 +14,16 @@ pub trait BiStream: Send {
     fn split(self) -> (Self::Reader, Self::Writer);
 }
 
+#[async_trait]
 pub trait Transport: Send + Sync {
     type Uni: UniStream;
     type Bi: BiStream;
 
-    fn open_uni_stream(
-        &mut self,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>>;
-    fn accept_uni_stream(
-        &mut self,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::Uni, BoxError>> + Send>>;
+    async fn open_uni_stream(&mut self) -> Result<Self::Uni, BoxError>;
+    async fn accept_uni_stream(&mut self) -> Result<Self::Uni, BoxError>;
 
-    fn open_bi_stream(
-        &mut self,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
-    fn accept_bi_stream(
-        &mut self,
-    ) -> Pin<Box<dyn Future<Output = Result<Self::Bi, BoxError>> + Send>>;
+    async fn open_bi_stream(&mut self) -> Result<Self::Bi, BoxError>;
+    async fn accept_bi_stream(&mut self) -> Result<Self::Bi, BoxError>;
 
-    fn send_datagram(
-        &mut self,
-        data: Bytes,
-    ) -> Pin<Box<dyn Future<Output = Result<(), BoxError>> + Send>>;
+    async fn send_datagram(&mut self, data: Bytes) -> Result<(), BoxError>;
 }
