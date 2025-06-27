@@ -56,7 +56,8 @@ impl SubscribeDone {
         }
 
         let value = buf.split_to(reason_len);
-        let reason = String::from_utf8(value.to_vec()).map_err(|e| IoError::new(ErrorKind::InvalidData, e))?;
+        let reason = String::from_utf8(value.to_vec())
+            .map_err(|e| IoError::new(ErrorKind::InvalidData, e))?;
 
         Ok(SubscribeDone {
             request_id,

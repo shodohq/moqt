@@ -60,7 +60,11 @@ impl Subscribe {
             if let Some(loc) = &self.start_location {
                 loc.encode(buf)?;
             } else {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "missing start location").into());
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "missing start location",
+                )
+                .into());
             }
         }
 
@@ -68,7 +72,11 @@ impl Subscribe {
             if let Some(end) = self.end_group {
                 vi.encode(end, buf)?;
             } else {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "missing end group").into());
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "missing end group",
+                )
+                .into());
             }
         }
 
@@ -156,7 +164,10 @@ impl Subscribe {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(Subscribe {
@@ -188,9 +199,15 @@ mod tests {
             group_order: 1,
             forward: 1,
             filter_type: 0x4,
-            start_location: Some(Location { group: 10, object: 5 }),
+            start_location: Some(Location {
+                group: 10,
+                object: 5,
+            }),
             end_group: Some(20),
-            parameters: vec![Parameter { parameter_type: 1, value: vec![42] }],
+            parameters: vec![Parameter {
+                parameter_type: 1,
+                value: vec![42],
+            }],
         };
 
         let mut buf = BytesMut::new();

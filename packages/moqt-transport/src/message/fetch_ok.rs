@@ -55,7 +55,9 @@ impl FetchOk {
             0 => false,
             1 => true,
             _ => {
-                return Err(IoError::new(ErrorKind::InvalidData, "invalid end of track value").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "invalid end of track value").into(),
+                );
             }
         };
 
@@ -79,7 +81,10 @@ impl FetchOk {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(FetchOk {
@@ -103,8 +108,14 @@ mod tests {
             request_id: 1,
             group_order: 1,
             end_of_track: true,
-            end_location: Location { group: 10, object: 5 },
-            parameters: vec![Parameter { parameter_type: 2, value: vec![7, 8] }],
+            end_location: Location {
+                group: 10,
+                object: 5,
+            },
+            parameters: vec![Parameter {
+                parameter_type: 2,
+                value: vec![7, 8],
+            }],
         };
 
         let mut buf = BytesMut::new();
@@ -123,7 +134,12 @@ mod tests {
         vi.encode(1, &mut buf).unwrap(); // request_id
         buf.put_u8(3); // invalid group order
         buf.put_u8(0); // end_of_track
-        Location { group: 0, object: 0 }.encode(&mut buf).unwrap();
+        Location {
+            group: 0,
+            object: 0,
+        }
+        .encode(&mut buf)
+        .unwrap();
         vi.encode(0, &mut buf).unwrap(); // no parameters
 
         assert!(FetchOk::decode(&mut buf).is_err());

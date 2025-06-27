@@ -31,7 +31,9 @@ mod tests {
 
     #[test]
     fn encode_decode_roundtrip() {
-        let msg = MaxRequestId { request_id: 0xabcdef }; // some arbitrary id
+        let msg = MaxRequestId {
+            request_id: 0xabcdef,
+        }; // some arbitrary id
 
         let mut buf = BytesMut::new();
         msg.encode(&mut buf).unwrap();

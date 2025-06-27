@@ -126,7 +126,10 @@ impl PublishOk {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(PublishOk {
@@ -154,9 +157,15 @@ mod tests {
             subscriber_priority: 5,
             group_order: 1,
             filter_type: 0x4,
-            start: Some(Location { group: 10, object: 2 }),
+            start: Some(Location {
+                group: 10,
+                object: 2,
+            }),
             end_group: Some(20),
-            parameters: vec![Parameter { parameter_type: 3, value: vec![7, 8] }],
+            parameters: vec![Parameter {
+                parameter_type: 3,
+                value: vec![7, 8],
+            }],
         };
 
         let mut buf = BytesMut::new();

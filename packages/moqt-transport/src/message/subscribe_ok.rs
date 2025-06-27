@@ -36,7 +36,11 @@ impl SubscribeOk {
             if let Some(loc) = &self.largest_location {
                 loc.encode(buf)?;
             } else {
-                return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "missing largest location").into());
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    "missing largest location",
+                )
+                .into());
             }
         }
 
@@ -77,7 +81,9 @@ impl SubscribeOk {
             0 => false,
             1 => true,
             _ => {
-                return Err(IoError::new(ErrorKind::InvalidData, "invalid content exists value").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "invalid content exists value").into(),
+                );
             }
         };
 
@@ -105,7 +111,10 @@ impl SubscribeOk {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(SubscribeOk {
@@ -132,8 +141,14 @@ mod tests {
             expires: 500,
             group_order: 1,
             content_exists: true,
-            largest_location: Some(Location { group: 10, object: 7 }),
-            parameters: vec![Parameter { parameter_type: 1, value: vec![42] }],
+            largest_location: Some(Location {
+                group: 10,
+                object: 7,
+            }),
+            parameters: vec![Parameter {
+                parameter_type: 1,
+                value: vec![42],
+            }],
         };
 
         let mut buf = BytesMut::new();

@@ -36,7 +36,9 @@ impl Publish {
         buf.put_u8(self.group_order);
 
         if self.content_exists != 0 && self.content_exists != 1 {
-            return Err(IoError::new(ErrorKind::InvalidData, "invalid content exists value").into());
+            return Err(
+                IoError::new(ErrorKind::InvalidData, "invalid content exists value").into(),
+            );
         }
         buf.put_u8(self.content_exists);
 
@@ -44,7 +46,9 @@ impl Publish {
             if let Some(loc) = &self.largest {
                 loc.encode(buf)?;
             } else {
-                return Err(IoError::new(ErrorKind::InvalidData, "missing largest location").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "missing largest location").into(),
+                );
             }
         }
 
@@ -75,7 +79,8 @@ impl Publish {
 
         let name_len = vi
             .decode(buf)?
-            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "track name len"))? as usize;
+            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "track name len"))?
+            as usize;
 
         if buf.len() < name_len {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "track name").into());
@@ -97,7 +102,9 @@ impl Publish {
         }
         let content_exists = buf.split_to(1)[0];
         if content_exists != 0 && content_exists != 1 {
-            return Err(IoError::new(ErrorKind::InvalidData, "invalid content exists value").into());
+            return Err(
+                IoError::new(ErrorKind::InvalidData, "invalid content exists value").into(),
+            );
         }
 
         let largest = if content_exists == 1 {
@@ -116,7 +123,8 @@ impl Publish {
 
         let params_len = vi
             .decode(buf)?
-            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameters len"))? as usize;
+            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameters len"))?
+            as usize;
         let mut parameters = Vec::with_capacity(params_len);
         for _ in 0..params_len {
             let ty = vi
@@ -124,12 +132,16 @@ impl Publish {
                 .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter type"))?;
             let len = vi
                 .decode(buf)?
-                .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter len"))? as usize;
+                .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameter len"))?
+                as usize;
             if buf.len() < len {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(Publish {
@@ -159,9 +171,15 @@ mod tests {
             track_alias: 3,
             group_order: 1,
             content_exists: 1,
-            largest: Some(Location { group: 10, object: 5 }),
+            largest: Some(Location {
+                group: 10,
+                object: 5,
+            }),
             forward: 1,
-            parameters: vec![Parameter { parameter_type: 4, value: vec![7, 8] }],
+            parameters: vec![Parameter {
+                parameter_type: 4,
+                value: vec![7, 8],
+            }],
         };
 
         let mut buf = BytesMut::new();

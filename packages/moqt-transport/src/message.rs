@@ -60,6 +60,16 @@ pub use unsubscribe_announces::*;
 
 /// Control Messages
 /// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-control-messages
+///
+/// MOQT uses a single bidirectional stream to exchange control messages,
+/// as defined in Section 3.3. Every single message on the control
+/// stream is formatted as follows:
+///
+/// MOQT Control Message {
+///   Message Type (i),
+///   Message Length (16),
+///   Message Payload (..),
+/// }
 pub enum ControlMessage {
     ClientSetup(ClientSetup),
     ServerSetup(ServerSetup),

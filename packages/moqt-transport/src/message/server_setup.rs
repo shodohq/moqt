@@ -57,10 +57,16 @@ impl ServerSetup {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(SetupParameter { parameter_type: ty, value });
+            parameters.push(SetupParameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
-        Ok(ServerSetup { version, parameters })
+        Ok(ServerSetup {
+            version,
+            parameters,
+        })
     }
 }
 
@@ -73,8 +79,14 @@ mod tests {
         let msg = ServerSetup {
             version: 1,
             parameters: vec![
-                SetupParameter { parameter_type: 0x02, value: vec![5] },
-                SetupParameter { parameter_type: 0x04, value: vec![1, 2] },
+                SetupParameter {
+                    parameter_type: 0x02,
+                    value: vec![5],
+                },
+                SetupParameter {
+                    parameter_type: 0x04,
+                    value: vec![1, 2],
+                },
             ],
         };
 

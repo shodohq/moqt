@@ -23,7 +23,11 @@ impl SubscribeUpdate {
 
         buf.put_u8(self.subscriber_priority);
         if self.forward != 0 && self.forward != 1 {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "invalid forward value").into());
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "invalid forward value",
+            )
+            .into());
         }
         buf.put_u8(self.forward);
 
@@ -78,7 +82,10 @@ impl SubscribeUpdate {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(SubscribeUpdate {
@@ -101,11 +108,17 @@ mod tests {
     fn encode_decode_roundtrip() {
         let msg = SubscribeUpdate {
             request_id: 1,
-            start_location: Location { group: 5, object: 2 },
+            start_location: Location {
+                group: 5,
+                object: 2,
+            },
             end_group: 10,
             subscriber_priority: 3,
             forward: 1,
-            parameters: vec![Parameter { parameter_type: 1, value: vec![42] }],
+            parameters: vec![Parameter {
+                parameter_type: 1,
+                value: vec![42],
+            }],
         };
 
         let mut buf = BytesMut::new();
@@ -122,7 +135,12 @@ mod tests {
         let mut buf = BytesMut::new();
         let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
-        Location { group: 1, object: 0 }.encode(&mut buf).unwrap();
+        Location {
+            group: 1,
+            object: 0,
+        }
+        .encode(&mut buf)
+        .unwrap();
         vi.encode(0, &mut buf).unwrap(); // end_group
         buf.put_u8(0); // subscriber_priority
         buf.put_u8(2); // invalid forward

@@ -11,7 +11,6 @@ pub struct ClientSetup {
     pub setup_parameters: Vec<SetupParameter>,
 }
 
-
 impl ClientSetup {
     /// Encode the CLIENT_SETUP message body into the provided buffer.
     pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
@@ -42,7 +41,8 @@ impl ClientSetup {
 
         let versions_len = vi
             .decode(buf)?
-            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "versions"))? as usize;
+            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "versions"))?
+            as usize;
 
         let mut versions = Vec::with_capacity(versions_len);
         for _ in 0..versions_len {
@@ -54,7 +54,8 @@ impl ClientSetup {
 
         let params_len = vi
             .decode(buf)?
-            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameters"))? as usize;
+            .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "parameters"))?
+            as usize;
 
         let mut parameters = Vec::with_capacity(params_len);
         for _ in 0..params_len {
@@ -69,10 +70,16 @@ impl ClientSetup {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(SetupParameter { parameter_type: ty, value });
+            parameters.push(SetupParameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
-        Ok(ClientSetup { supported_versions: versions, setup_parameters: parameters })
+        Ok(ClientSetup {
+            supported_versions: versions,
+            setup_parameters: parameters,
+        })
     }
 }
 
@@ -86,8 +93,14 @@ mod tests {
         let msg = ClientSetup {
             supported_versions: vec![1, 0xff00000d],
             setup_parameters: vec![
-                SetupParameter { parameter_type: 0x01, value: b"/".to_vec() },
-                SetupParameter { parameter_type: 0x02, value: vec![5] },
+                SetupParameter {
+                    parameter_type: 0x01,
+                    value: b"/".to_vec(),
+                },
+                SetupParameter {
+                    parameter_type: 0x02,
+                    value: vec![5],
+                },
             ],
         };
 

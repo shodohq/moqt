@@ -39,4 +39,3 @@ impl Location {
         Ok(Location { group, object })
     }
 }
-

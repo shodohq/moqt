@@ -55,7 +55,10 @@ impl Goaway {
         let new_session_uri = if len == 0 {
             None
         } else {
-            Some(String::from_utf8(value.to_vec()).map_err(|e| IoError::new(ErrorKind::InvalidData, e))?)
+            Some(
+                String::from_utf8(value.to_vec())
+                    .map_err(|e| IoError::new(ErrorKind::InvalidData, e))?,
+            )
         };
 
         Ok(Goaway { new_session_uri })
@@ -84,7 +87,9 @@ mod tests {
 
     #[test]
     fn encode_decode_roundtrip_without_uri() {
-        let msg = Goaway { new_session_uri: None };
+        let msg = Goaway {
+            new_session_uri: None,
+        };
 
         let mut buf = BytesMut::new();
         msg.encode(&mut buf).unwrap();

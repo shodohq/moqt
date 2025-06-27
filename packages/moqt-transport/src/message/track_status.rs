@@ -23,10 +23,14 @@ impl TrackStatus {
 
         if matches!(self.status_code, 0x01 | 0x02) {
             if self.largest_location.group != 0 || self.largest_location.object != 0 {
-                return Err(IoError::new(ErrorKind::InvalidData, "largest location must be zero").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "largest location must be zero").into(),
+                );
             }
             if !self.parameters.is_empty() {
-                return Err(IoError::new(ErrorKind::InvalidData, "parameters must be empty").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "parameters must be empty").into(),
+                );
             }
         }
 
@@ -80,15 +84,22 @@ impl TrackStatus {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         if matches!(status_code, 0x01 | 0x02) {
             if largest_location.group != 0 || largest_location.object != 0 {
-                return Err(IoError::new(ErrorKind::InvalidData, "largest location must be zero").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "largest location must be zero").into(),
+                );
             }
             if !parameters.is_empty() {
-                return Err(IoError::new(ErrorKind::InvalidData, "parameters must be empty").into());
+                return Err(
+                    IoError::new(ErrorKind::InvalidData, "parameters must be empty").into(),
+                );
             }
         }
 
@@ -110,8 +121,14 @@ mod tests {
         let msg = TrackStatus {
             request_id: 1,
             status_code: 0x00,
-            largest_location: Location { group: 10, object: 5 },
-            parameters: vec![Parameter { parameter_type: 2, value: vec![42] }],
+            largest_location: Location {
+                group: 10,
+                object: 5,
+            },
+            parameters: vec![Parameter {
+                parameter_type: 2,
+                value: vec![42],
+            }],
         };
 
         let mut buf = BytesMut::new();
@@ -128,7 +145,10 @@ mod tests {
         let msg = TrackStatus {
             request_id: 5,
             status_code: 0x02,
-            largest_location: Location { group: 0, object: 0 },
+            largest_location: Location {
+                group: 0,
+                object: 0,
+            },
             parameters: Vec::new(),
         };
 
@@ -146,7 +166,10 @@ mod tests {
         let msg = TrackStatus {
             request_id: 1,
             status_code: 0x01,
-            largest_location: Location { group: 1, object: 0 },
+            largest_location: Location {
+                group: 1,
+                object: 0,
+            },
             parameters: Vec::new(),
         };
 
@@ -160,7 +183,12 @@ mod tests {
         let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         vi.encode(0x09, &mut buf).unwrap(); // invalid status code
-        Location { group: 0, object: 0 }.encode(&mut buf).unwrap();
+        Location {
+            group: 0,
+            object: 0,
+        }
+        .encode(&mut buf)
+        .unwrap();
         vi.encode(0, &mut buf).unwrap();
 
         assert!(TrackStatus::decode(&mut buf).is_err());
@@ -172,7 +200,12 @@ mod tests {
         let mut vi = crate::codec::VarInt;
         vi.encode(1, &mut buf).unwrap(); // request_id
         vi.encode(0x02, &mut buf).unwrap(); // status code (not yet begun)
-        Location { group: 1, object: 0 }.encode(&mut buf).unwrap();
+        Location {
+            group: 1,
+            object: 0,
+        }
+        .encode(&mut buf)
+        .unwrap();
         vi.encode(1, &mut buf).unwrap(); // parameters len
         vi.encode(1, &mut buf).unwrap(); // param type
         vi.encode(1, &mut buf).unwrap(); // param len

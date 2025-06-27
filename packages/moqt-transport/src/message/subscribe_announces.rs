@@ -63,7 +63,7 @@ impl SubscribeAnnounces {
                 .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "part len"))?
                 as usize;
             if buf.len() < part_len {
-                return Err(IoError::new(ErrorKind::UnexpectedEof, "part" ).into());
+                return Err(IoError::new(ErrorKind::UnexpectedEof, "part").into());
             }
             let bytes = buf.split_to(part_len);
             let part = String::from_utf8(bytes.to_vec())
@@ -89,7 +89,10 @@ impl SubscribeAnnounces {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(SubscribeAnnounces {
@@ -109,7 +112,10 @@ mod tests {
         let msg = SubscribeAnnounces {
             request_id: 1,
             track_namespace_prefix: vec!["example.com".into(), "meeting=123".into()],
-            parameters: vec![Parameter { parameter_type: 1, value: vec![42] }],
+            parameters: vec![Parameter {
+                parameter_type: 1,
+                value: vec![42],
+            }],
         };
 
         let mut buf = BytesMut::new();

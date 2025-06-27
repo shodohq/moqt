@@ -34,17 +34,16 @@ impl Fetch {
 
         match self.fetch_type {
             0x1 => {
-                let ns = self
-                    .track_namespace
-                    .ok_or_else(|| IoError::new(ErrorKind::InvalidData, "missing track namespace"))?;
+                let ns = self.track_namespace.ok_or_else(|| {
+                    IoError::new(ErrorKind::InvalidData, "missing track namespace")
+                })?;
                 let name = self
                     .track_name
                     .as_ref()
                     .ok_or_else(|| IoError::new(ErrorKind::InvalidData, "missing track name"))?;
-                let start = self
-                    .start_location
-                    .as_ref()
-                    .ok_or_else(|| IoError::new(ErrorKind::InvalidData, "missing start location"))?;
+                let start = self.start_location.as_ref().ok_or_else(|| {
+                    IoError::new(ErrorKind::InvalidData, "missing start location")
+                })?;
                 let end = self
                     .end_location
                     .as_ref()
@@ -57,9 +56,9 @@ impl Fetch {
                 end.encode(buf)?;
             }
             0x2 | 0x3 => {
-                let join_req = self
-                    .joining_request_id
-                    .ok_or_else(|| IoError::new(ErrorKind::InvalidData, "missing joining request id"))?;
+                let join_req = self.joining_request_id.ok_or_else(|| {
+                    IoError::new(ErrorKind::InvalidData, "missing joining request id")
+                })?;
                 let join_start = self
                     .joining_start
                     .ok_or_else(|| IoError::new(ErrorKind::InvalidData, "missing joining start"))?;
@@ -112,10 +111,10 @@ impl Fetch {
 
         match fetch_type {
             0x1 => {
-                track_namespace = Some(
-                    vi.decode(buf)?
-                        .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "track namespace"))?,
-                );
+                track_namespace =
+                    Some(vi.decode(buf)?.ok_or_else(|| {
+                        IoError::new(ErrorKind::UnexpectedEof, "track namespace")
+                    })?);
                 let name_len = vi
                     .decode(buf)?
                     .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "track name len"))?
@@ -132,10 +131,10 @@ impl Fetch {
                 end_location = Some(Location::decode(buf)?);
             }
             0x2 | 0x3 => {
-                joining_request_id = Some(
-                    vi.decode(buf)?
-                        .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "joining request id"))?,
-                );
+                joining_request_id =
+                    Some(vi.decode(buf)?.ok_or_else(|| {
+                        IoError::new(ErrorKind::UnexpectedEof, "joining request id")
+                    })?);
                 joining_start = Some(
                     vi.decode(buf)?
                         .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "joining start"))?,
@@ -164,7 +163,10 @@ impl Fetch {
                 return Err(IoError::new(ErrorKind::UnexpectedEof, "parameter value").into());
             }
             let value = buf.split_to(len).to_vec();
-            parameters.push(Parameter { parameter_type: ty, value });
+            parameters.push(Parameter {
+                parameter_type: ty,
+                value,
+            });
         }
 
         Ok(Fetch {
@@ -196,11 +198,20 @@ mod tests {
             fetch_type: 0x1,
             track_namespace: Some(3),
             track_name: Some("video".into()),
-            start_location: Some(Location { group: 10, object: 5 }),
-            end_location: Some(Location { group: 20, object: 0 }),
+            start_location: Some(Location {
+                group: 10,
+                object: 5,
+            }),
+            end_location: Some(Location {
+                group: 20,
+                object: 0,
+            }),
             joining_request_id: None,
             joining_start: None,
-            parameters: vec![Parameter { parameter_type: 4, value: vec![7, 8] }],
+            parameters: vec![Parameter {
+                parameter_type: 4,
+                value: vec![7, 8],
+            }],
         };
 
         let mut buf = BytesMut::new();

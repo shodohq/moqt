@@ -31,7 +31,9 @@ mod tests {
 
     #[test]
     fn encode_decode_roundtrip() {
-        let msg = Unannounce { track_namespace: 42 };
+        let msg = Unannounce {
+            track_namespace: 42,
+        };
 
         let mut buf = BytesMut::new();
         msg.encode(&mut buf).unwrap();
