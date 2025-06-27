@@ -1,6 +1,7 @@
 use bytes::Bytes;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::error::Error;
 
@@ -12,6 +13,7 @@ pub struct TrackManager {
     #[allow(dead_code)]
     tracks: RwLock<HashMap<FullTrackName, Arc<TrackState>>>,
     aliases: RwLock<HashMap<TrackAlias, FullTrackName>>,
+    request_counter: AtomicU64,
 }
 
 #[allow(dead_code)]
@@ -38,6 +40,11 @@ impl TrackManager {
         }
         aliases.insert(alias, name);
         Ok(())
+    }
+
+    /// Generate a new unique request identifier.
+    pub fn new_request_id(&self) -> u64 {
+        self.request_counter.fetch_add(1, Ordering::SeqCst)
     }
 
     /// Associate an alias with an existing track. Returns an error on
@@ -110,5 +117,13 @@ mod tests {
         manager.add_track("audio".to_string());
         manager.set_track_alias(&"audio".to_string(), 2).unwrap();
         assert_eq!(manager.resolve_alias(2).as_deref(), Some("audio"));
+    }
+
+    #[test]
+    fn request_id_increments() {
+        let manager = TrackManager::default();
+        let first = manager.new_request_id();
+        let second = manager.new_request_id();
+        assert!(second > first);
     }
 }
