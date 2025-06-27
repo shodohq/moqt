@@ -65,7 +65,9 @@ impl Goaway {
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "uri length"))?
             as usize;
         if len > Self::MAX_URI_LENGTH {
-            return Err(IoError::new(ErrorKind::InvalidData, "uri too long").into());
+            return Err(crate::error::Error::ProtocolViolation {
+                reason: "GOAWAY URI length exceeded maximum".into(),
+            });
         }
         if buf.len() < len {
             return Err(IoError::new(ErrorKind::UnexpectedEof, "uri").into());
@@ -136,6 +138,9 @@ mod tests {
         vi.encode((Goaway::MAX_URI_LENGTH + 1) as u64, &mut buf).unwrap();
         buf.extend(std::iter::repeat(b'a').take(Goaway::MAX_URI_LENGTH + 1));
 
-        assert!(Goaway::decode(&mut buf).is_err());
+        match Goaway::decode(&mut buf) {
+            Err(crate::error::Error::ProtocolViolation { .. }) => {}
+            e => panic!("unexpected result: {:?}", e),
+        }
     }
 }
