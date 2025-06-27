@@ -1,4 +1,4 @@
-use bytes::{BufMut, BytesMut};
+use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
 use crate::model::Parameter;
@@ -92,6 +92,7 @@ impl ClientSetup {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::BufMut;
     use crate::model::Parameter;
 
     #[test]
