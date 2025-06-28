@@ -1,7 +1,10 @@
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
-use crate::model::Parameter;
+use crate::{
+    codec::{Decode, Encode},
+    model::Parameter,
+};
 
 /// SERVER_SETUP
 ///
@@ -31,8 +34,8 @@ pub struct ServerSetup {
     pub setup_parameters: Vec<Parameter>,
 }
 
-impl ServerSetup {
-    pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
+impl Encode for ServerSetup {
+    fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::codec::VarInt;
 
         // Selected Version
@@ -46,8 +49,10 @@ impl ServerSetup {
 
         Ok(())
     }
+}
 
-    pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
+impl Decode for ServerSetup {
+    fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;

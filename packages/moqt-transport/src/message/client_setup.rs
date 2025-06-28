@@ -1,7 +1,10 @@
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
-use crate::model::Parameter;
+use crate::{
+    codec::{Decode, Encode},
+    model::Parameter,
+};
 
 /// CLIENT_SETUP
 ///
@@ -32,8 +35,8 @@ pub struct ClientSetup {
     pub setup_parameters: Vec<Parameter>,
 }
 
-impl ClientSetup {
-    pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
+impl Encode for ClientSetup {
+    fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::codec::VarInt;
 
         // Supported Versions
@@ -50,8 +53,10 @@ impl ClientSetup {
 
         Ok(())
     }
+}
 
-    pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
+impl Decode for ClientSetup {
+    fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;
@@ -92,8 +97,8 @@ impl ClientSetup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bytes::BufMut;
     use crate::model::Parameter;
+    use bytes::BufMut;
 
     #[test]
     fn encode_decode_roundtrip() {

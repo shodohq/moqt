@@ -2,7 +2,7 @@ use bytes::{BufMut, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
 use crate::{
-    codec::VarInt,
+    codec::{Decode, VarInt, WithLengthCodec},
     error::Error,
     message::{
         Announce, AnnounceCancel, AnnounceError, AnnounceOk, ClientSetup, ControlMessage,
@@ -20,20 +20,16 @@ impl Encoder<ControlMessage> for ControlMessageCodec {
     type Error = Error;
 
     fn encode(&mut self, item: ControlMessage, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let mut with_length = WithLengthCodec::new();
+
         match item {
             ControlMessage::ClientSetup(msg) => {
                 VarInt.encode(ControlMessageType::ClientSetup as u64, dst)?;
-                let mut buf = BytesMut::new();
-                msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
-                dst.put(buf);
+                with_length.encode(msg, dst)?;
             }
             ControlMessage::ServerSetup(msg) => {
                 VarInt.encode(ControlMessageType::ServerSetup as u64, dst)?;
-                let mut buf = BytesMut::new();
-                msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
-                dst.put(buf);
+                with_length.encode(msg, dst)?;
             }
             ControlMessage::Subscribe(msg) => {
                 VarInt.encode(ControlMessageType::Subscribe as u64, dst)?;
@@ -156,24 +152,15 @@ impl Encoder<ControlMessage> for ControlMessageCodec {
             }
             ControlMessage::Goaway(msg) => {
                 VarInt.encode(ControlMessageType::Goaway as u64, dst)?;
-                let mut buf = BytesMut::new();
-                msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
-                dst.put(buf);
+                with_length.encode(msg, dst)?;
             }
             ControlMessage::MaxRequestId(msg) => {
                 VarInt.encode(ControlMessageType::MaxRequestId as u64, dst)?;
-                let mut buf = BytesMut::new();
-                msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
-                dst.put(buf);
+                with_length.encode(msg, dst)?;
             }
             ControlMessage::RequestsBlocked(msg) => {
                 VarInt.encode(ControlMessageType::RequestsBlocked as u64, dst)?;
-                let mut buf = BytesMut::new();
-                msg.encode(&mut buf)?;
-                VarInt.encode(buf.len() as u64, dst)?;
-                dst.put(buf);
+                with_length.encode(msg, dst)?;
             }
             ControlMessage::TrackStatus(msg) => {
                 VarInt.encode(ControlMessageType::TrackStatus as u64, dst)?;

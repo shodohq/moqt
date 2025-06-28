@@ -1,6 +1,12 @@
 use bytes::{BufMut, BytesMut};
 use tokio_util::codec::{Decoder, Encoder};
 
+use crate::codec::{Decode, Encode};
+
+/// The maximum size in bytes of the optional URI contained in a GOAWAY
+/// message as defined by the specification.
+const MAX_URI_LENGTH: usize = 8_192;
+
 /// GOAWAY
 ///
 /// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-goaway
@@ -30,18 +36,14 @@ pub struct Goaway {
     pub new_session_uri: Option<String>,
 }
 
-impl Goaway {
-    /// The maximum size in bytes of the optional URI contained in a GOAWAY
-    /// message as defined by the specification.
-    pub const MAX_URI_LENGTH: usize = 8_192;
-
-    pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
+impl Encode for Goaway {
+    fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::codec::VarInt;
 
         // New Session URI
         if let Some(uri) = &self.new_session_uri {
             let bytes = uri.as_bytes();
-            if bytes.len() > Self::MAX_URI_LENGTH {
+            if bytes.len() > MAX_URI_LENGTH {
                 use std::io::{Error as IoError, ErrorKind};
                 return Err(IoError::new(ErrorKind::InvalidData, "uri too long").into());
             }
@@ -53,8 +55,10 @@ impl Goaway {
 
         Ok(())
     }
+}
 
-    pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
+impl Decode for Goaway {
+    fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;
@@ -64,7 +68,7 @@ impl Goaway {
             .decode(buf)?
             .ok_or_else(|| IoError::new(ErrorKind::UnexpectedEof, "uri length"))?
             as usize;
-        if len > Self::MAX_URI_LENGTH {
+        if len > MAX_URI_LENGTH {
             return Err(crate::error::Error::ProtocolViolation {
                 reason: "GOAWAY URI length exceeded maximum".into(),
             });
@@ -124,7 +128,7 @@ mod tests {
     #[test]
     fn encode_fails_on_long_uri() {
         let msg = Goaway {
-            new_session_uri: Some("a".repeat(Goaway::MAX_URI_LENGTH + 1)),
+            new_session_uri: Some("a".repeat(MAX_URI_LENGTH + 1)),
         };
 
         let mut buf = BytesMut::new();
@@ -135,9 +139,8 @@ mod tests {
     fn decode_fails_on_long_uri() {
         let mut buf = BytesMut::new();
         let mut vi = crate::codec::VarInt;
-        vi.encode((Goaway::MAX_URI_LENGTH + 1) as u64, &mut buf)
-            .unwrap();
-        buf.extend(std::iter::repeat(b'a').take(Goaway::MAX_URI_LENGTH + 1));
+        vi.encode((MAX_URI_LENGTH + 1) as u64, &mut buf).unwrap();
+        buf.extend(std::iter::repeat(b'a').take(MAX_URI_LENGTH + 1));
 
         match Goaway::decode(&mut buf) {
             Err(crate::error::Error::ProtocolViolation { .. }) => {}

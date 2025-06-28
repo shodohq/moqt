@@ -1,6 +1,8 @@
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
+use crate::codec::{Decode, Encode};
+
 /// REQUESTS_BLOCKED
 ///
 /// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-requests_blocked
@@ -26,14 +28,16 @@ pub struct RequestsBlocked {
     pub maximum_request_id: u64,
 }
 
-impl RequestsBlocked {
-    pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
+impl Encode for RequestsBlocked {
+    fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::codec::VarInt;
         vi.encode(self.maximum_request_id, buf)?;
         Ok(())
     }
+}
 
-    pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
+impl Decode for RequestsBlocked {
+    fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;

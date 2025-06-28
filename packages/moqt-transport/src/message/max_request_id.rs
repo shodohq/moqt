@@ -1,6 +1,8 @@
 use bytes::BytesMut;
 use tokio_util::codec::{Decoder, Encoder};
 
+use crate::codec::{Decode, Encode};
+
 /// MAX_REQUEST_ID
 ///
 /// https://datatracker.ietf.org/doc/html/draft-ietf-moq-transport-12#name-max_request_id-2
@@ -23,14 +25,16 @@ pub struct MaxRequestId {
     pub request_id: u64,
 }
 
-impl MaxRequestId {
-    pub fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
+impl Encode for MaxRequestId {
+    fn encode(&self, buf: &mut BytesMut) -> Result<(), crate::error::Error> {
         let mut vi = crate::codec::VarInt;
         vi.encode(self.request_id, buf)?;
         Ok(())
     }
+}
 
-    pub fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
+impl Decode for MaxRequestId {
+    fn decode(buf: &mut BytesMut) -> Result<Self, crate::error::Error> {
         use std::io::{Error as IoError, ErrorKind};
 
         let mut vi = crate::codec::VarInt;
